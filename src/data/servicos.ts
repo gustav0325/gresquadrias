@@ -21,7 +21,7 @@ export const SERVICOS: readonly Servico[] = [
     aplicacoes: ["Salas", "Quartos", "Varandas", "Fachadas"],
     orcamento: { label: "Orçar esquadrias", href: QUOTE_LINK.href },
     imagem: {
-      src: "/images/servicos/01-esquadrias-de-aluminio.png",
+      src: "/images/servicos/01-esquadrias-de-aluminio.jpg",
       alt: "Porta de correr em alumínio preto com vidro, aberta para o jardim",
     },
   },
@@ -33,7 +33,7 @@ export const SERVICOS: readonly Servico[] = [
     aplicacoes: ["Guarda-corpos", "Divisórias", "Portas", "Fechamentos de varanda"],
     orcamento: { label: "Orçar vidros", href: QUOTE_LINK.href },
     imagem: {
-      src: "/images/servicos/02-vidros-temperados-e-laminados.png",
+      src: "/images/servicos/02-vidros-temperados-e-laminados.jpg",
       alt: "Cobertura de vidro com perfil de alumínio no alto de um edifício, com a cidade ao fundo",
     },
   },
@@ -45,7 +45,7 @@ export const SERVICOS: readonly Servico[] = [
     aplicacoes: ["Áreas gourmet", "Garagens", "Corredores externos", "Pergolados"],
     orcamento: { label: "Orçar coberturas", href: QUOTE_LINK.href },
     imagem: {
-      src: "/images/servicos/03-coberturas-termoacusticas.png",
+      src: "/images/servicos/03-coberturas-termoacusticas.jpg",
       alt: "Cobertura termoacústica com estrutura metálica preta sobre área de churrasqueira",
     },
   },
@@ -57,7 +57,7 @@ export const SERVICOS: readonly Servico[] = [
     aplicacoes: ["Ripados", "Áreas de lazer", "Espaços comerciais", "Projetos especiais"],
     orcamento: { label: "Orçar estruturas", href: QUOTE_LINK.href },
     imagem: {
-      src: "/images/servicos/04-estruturas-e-projetos-especiais.png",
+      src: "/images/servicos/04-estruturas-e-projetos-especiais.jpg",
       alt: "Fachada com porta ripada preta e janela de alumínio com vidro",
     },
   },

@@ -5,7 +5,7 @@ import { useRef } from "react";
 
 import { MaskedWords } from "@/components/ui/MaskedWords";
 import { SOBRE } from "@/data/sobre";
-import { gsap, MOTION_QUERIES, prefersReducedMotion, useGSAP } from "@/lib/gsap";
+import { entrancesEnabled, gsap, MOTION_QUERIES, prefersReducedMotion, useGSAP } from "@/lib/gsap";
 import { clearReveal, WORD_HIDDEN_Y, wordLines } from "@/lib/reveal";
 
 /** Tom inicial das palavras do manifesto: a tinta do título a 47% (≥ 3:1 sobre o fundo). */
@@ -37,6 +37,8 @@ export function About() {
 
       const desktop = window.matchMedia(MOTION_QUERIES.desktop).matches;
       const title = q('[data-about-el="title"]')[0];
+      // Leituras de layout antes de qualquer escrita (evita layouts forçados em sequência)
+      const lines = entrancesEnabled() ? wordLines(title) : [];
 
       // Manifesto: cada palavra passa do tom claro para a tinta final; "espaços." fica em bronze
       const ink = getComputedStyle(title).color;
@@ -58,13 +60,12 @@ export function About() {
         },
       });
 
-      if (!document.documentElement.classList.contains("js-ready")) return;
+      if (!entrancesEnabled()) return;
 
       // Entrada: cabeçalho → "+15" e texto → pilares (mobile: mais curta)
       const k = desktop ? 1 : 0.75;
       const eyebrow = q('[data-about-el="eyebrow-text"]');
       const eyebrowLine = q('[data-about-el="eyebrow-line"]');
-      const lines = wordLines(title);
       const number = q('[data-about-el="number-value"]');
       const count = q("[data-count]")[0];
       const label = q('[data-about-el="number-label"]');
@@ -82,7 +83,15 @@ export function About() {
 
       const entry = gsap.timeline({
         scrollTrigger: { trigger: section, start: "top 65%", once: true },
-        onComplete: clearReveal([eyebrow, eyebrowLine, lines.flat(), number, label, paragraphs, link]),
+        onComplete: clearReveal([
+          eyebrow,
+          eyebrowLine,
+          lines.flat(),
+          number,
+          label,
+          paragraphs,
+          link,
+        ]),
       });
       entry
         .to(eyebrow, { opacity: 1, y: 0, duration: 0.6 * k, ease: "power2.out" }, 0)
@@ -133,7 +142,16 @@ export function About() {
       if (desktop) {
         entry.eventCallback(
           "onComplete",
-          clearReveal([eyebrow, eyebrowLine, lines.flat(), number, label, paragraphs, link, ...pillarTargets]),
+          clearReveal([
+            eyebrow,
+            eyebrowLine,
+            lines.flat(),
+            number,
+            label,
+            paragraphs,
+            link,
+            ...pillarTargets,
+          ]),
         );
       }
 
@@ -266,10 +284,16 @@ export function About() {
               data-reveal
               data-pillar-line
             />
-            <h3 data-reveal className="mt-7 font-display text-[28px] leading-[1.05] font-medium tracking-[-0.01em] text-espresso md:mt-11 md:text-[length:clamp(28px,2.5vw,36px)] lg:mt-(--about-pillar-line) lg:text-[length:clamp(1.25rem,min(2.08vw,3.3vh),1.875rem)]">
+            <h3
+              data-reveal
+              className="mt-7 font-display text-[28px] leading-[1.05] font-medium tracking-[-0.01em] text-espresso md:mt-11 md:text-[length:clamp(28px,2.5vw,36px)] lg:mt-(--about-pillar-line) lg:text-[length:clamp(1.25rem,min(2.08vw,3.3vh),1.875rem)]"
+            >
               {pilar.titulo}
             </h3>
-            <p data-reveal className="mt-3 text-[15px] leading-[1.6] text-taupe-text md:mt-4 md:text-[16px] lg:mt-(--about-pillar-desc) lg:text-[15px]">
+            <p
+              data-reveal
+              className="mt-3 text-[15px] leading-[1.6] text-taupe-text md:mt-4 md:text-[16px] lg:mt-(--about-pillar-desc) lg:text-[15px]"
+            >
               {pilar.descricao}
             </p>
           </li>

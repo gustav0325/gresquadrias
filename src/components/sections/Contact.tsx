@@ -4,8 +4,8 @@ import { useRef } from "react";
 
 import { MaskedWords } from "@/components/ui/MaskedWords";
 import { CONTATO, CONTATO_TEXTOS } from "@/data/contato";
-import { gsap, MOTION_QUERIES, prefersReducedMotion, useGSAP } from "@/lib/gsap";
-import { clearReveal, WORD_HIDDEN_Y, wordLines } from "@/lib/reveal";
+import { entrancesEnabled, gsap, MOTION_QUERIES, useGSAP } from "@/lib/gsap";
+import { clearReveal, REVEALED, WORD_HIDDEN_Y, wordLines } from "@/lib/reveal";
 
 const NOVA_ABA = { target: "_blank", rel: "noopener noreferrer" } as const;
 
@@ -25,7 +25,7 @@ export function Contact() {
 
   useGSAP(
     () => {
-      if (prefersReducedMotion() || !document.documentElement.classList.contains("js-ready")) return;
+      if (!entrancesEnabled()) return;
       const q = gsap.utils.selector(sectionRef);
       const desktop = window.matchMedia(MOTION_QUERIES.desktop).matches;
       const k = desktop ? 1 : 0.75;
@@ -42,7 +42,11 @@ export function Contact() {
       gsap.set(lines.flat(), { opacity: 1, yPercent: WORD_HIDDEN_Y });
       gsap.set(lead, { opacity: 0, y: 20 * k });
       const header = gsap.timeline({
-        scrollTrigger: { trigger: q('[data-contact-el="header"]')[0], start: "top 80%", once: true },
+        scrollTrigger: {
+          trigger: q('[data-contact-el="header"]')[0],
+          start: "top 80%",
+          once: true,
+        },
         onComplete: clearReveal([eyebrow, eyebrowLine, lines.flat(), lead]),
       });
       header
@@ -72,11 +76,15 @@ export function Contact() {
           .to(map, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1 * k, ease: "power3.out" }, at)
           .to(mapInner, { scale: 1, duration: 1.1 * k, ease: "power3.out" }, at);
       // Fim do mapa: sem transform nem clip-path (estático e interativo)
-      const releaseMap = () => gsap.set([map, mapInner], { clearProps: "transform,clipPath" });
+      const releaseMap = () => gsap.set([map, mapInner], REVEALED);
 
       if (desktop) {
         const band = gsap.timeline({
-          scrollTrigger: { trigger: q('[data-contact-el="band"]')[0], start: "top 70%", once: true },
+          scrollTrigger: {
+            trigger: q('[data-contact-el="band"]')[0],
+            start: "top 70%",
+            once: true,
+          },
           onComplete: () => {
             clearReveal([cells, cellLines, button, links])();
             releaseMap();
@@ -121,8 +129,22 @@ export function Contact() {
   );
 
   const linhas = [
-    { rotulo: "TELEFONE / WHATSAPP", valor: <a href={telefone.href} className="focus-ring rounded-sm">{telefone.exibicao}</a> },
-    { rotulo: "E-MAIL", valor: <a href={email.href} className="focus-ring rounded-sm">{email.exibicao}</a> },
+    {
+      rotulo: "TELEFONE / WHATSAPP",
+      valor: (
+        <a href={telefone.href} className="focus-ring rounded-sm">
+          {telefone.exibicao}
+        </a>
+      ),
+    },
+    {
+      rotulo: "E-MAIL",
+      valor: (
+        <a href={email.href} className="focus-ring rounded-sm">
+          {email.exibicao}
+        </a>
+      ),
+    },
     { rotulo: "ENDEREÇO", valor: endereco.linha1, complemento: endereco.linha2 },
     { rotulo: "HORÁRIO DE ATENDIMENTO", valor: horario.linha1, complemento: horario.linha2 },
   ];
@@ -253,7 +275,10 @@ export function Contact() {
                   data-reveal
                   data-contact-el="secondary"
                 >
-                  Enviar e-mail <span className="link-line__arrow underline decoration-1 underline-offset-[3px]">↗</span>
+                  Enviar e-mail{" "}
+                  <span className="link-line__arrow underline decoration-1 underline-offset-[3px]">
+                    ↗
+                  </span>
                 </a>
                 <a
                   href={endereco.comoChegar}
@@ -263,7 +288,10 @@ export function Contact() {
                   data-reveal
                   data-contact-el="secondary"
                 >
-                  Como chegar <span className="link-line__arrow underline decoration-1 underline-offset-[3px]">↗</span>
+                  Como chegar{" "}
+                  <span className="link-line__arrow underline decoration-1 underline-offset-[3px]">
+                    ↗
+                  </span>
                 </a>
               </p>
             </div>

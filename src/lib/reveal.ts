@@ -18,9 +18,15 @@ export function wordLines(title: Element | undefined): HTMLElement[][] {
   return [...lines.entries()].sort(([a], [b]) => a - b).map(([, words]) => words);
 }
 
-/** No fim de uma entrada: sem estilos inline, igual à versão estática. */
-export const clearReveal = (targets: gsap.TweenTarget) => () =>
-  gsap.set(targets, { clearProps: "transform,transformOrigin,opacity,clipPath" });
+/**
+ * Estado final de uma entrada: sem transforms (nenhuma camada extra; rasterização igual à da
+ * versão estática) e com o visível explícito inline. O explícito importa: enquanto
+ * `html.js-ready` existir, o CSS de espera esconderia o elemento outra vez.
+ */
+export const REVEALED = { opacity: 1, clipPath: "none", clearProps: "transform,transformOrigin" };
+
+/** No fim de uma entrada (onComplete): ver REVEALED. */
+export const clearReveal = (targets: gsap.TweenTarget) => () => gsap.set(targets, REVEALED);
 
 let refreshTimer = 0;
 /** Recalcula os gatilhos depois de mudanças de layout (fotos carregadas, acordeão…), agrupando chamadas. */

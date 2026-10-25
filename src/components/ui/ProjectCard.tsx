@@ -6,9 +6,6 @@ type ProjectCardProps = {
   projeto: Projeto;
   /** Card da coluna deslocada no desktop. */
   offset?: boolean;
-  /** Primeira foto da grade: carrega sem lazy. */
-  eager?: boolean;
-  onImageLoad?: () => void;
 };
 
 /**
@@ -21,7 +18,7 @@ type ProjectCardProps = {
  *
  * As setas do Figma (←/→) não têm ação no protótipo e cada obra tem uma foto: não são exibidas.
  */
-export function ProjectCard({ projeto, offset = false, eager = false, onImageLoad }: ProjectCardProps) {
+export function ProjectCard({ projeto, offset = false }: ProjectCardProps) {
   return (
     <article
       className="project-card relative flex flex-col gap-4 md:gap-5"
@@ -35,11 +32,10 @@ export function ProjectCard({ projeto, offset = false, eager = false, onImageLoa
               src={projeto.fotos[0]}
               alt={projetoAlt(projeto)}
               fill
-              quality={85}
-              loading={eager ? "eager" : "lazy"}
+              quality={80}
+              loading="lazy"
               sizes="(min-width: 768px) 46vw, calc(100vw - 40px)"
               className="project-card__img object-cover"
-              onLoad={onImageLoad}
             />
           </div>
         </div>

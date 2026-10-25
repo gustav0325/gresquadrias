@@ -267,8 +267,9 @@ body {
 
 /* Efeito "Noise" do Figma (ruído branco 6%), exportado como SVG */
 .hero__grain {
-  background-image: url("/images/hero/grao-de-filme.svg");
-  background-size: 1440px 1024px;
+  /* Mesmo filtro do Figma renderizado num ladrilho pequeno (ver .paper-grain) */
+  background-image: url("/images/hero/grao-de-filme.png");
+  background-size: 256px 256px;
   background-repeat: repeat;
 }
 
@@ -376,8 +377,8 @@ html.js-ready .scroll-seal__arrow {
 
 /* Efeito "Noise" do Figma (ruído escuro 6%), exportado como SVG */
 .projects__grain {
-  background-image: url("/images/textures/grao-de-papel.svg");
-  background-size: 1440px 2831px;
+  background-image: url("/images/textures/grao-de-papel.png");
+  background-size: 256px 256px;
   background-repeat: repeat;
 }
 
@@ -513,6 +514,22 @@ html.js-ready .about [data-word] {
   min-height: 0;
 }
 
+/* Texto da resposta acompanha a abertura com fade */
+.faq__panel p {
+  transition: opacity 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+html.js .faq__panel[data-open="false"] p {
+  opacity: 0;
+}
+
+/* A mudança de altura de um item não obriga a recalcular o layout de fora dele.
+   Só layout: "paint" cortaria o anel de foco dos botões (fica 4px para fora). */
+[data-faq-list],
+[data-faq-item] {
+  contain: layout;
+}
+
 html.js .faq__panel[data-open="false"] {
   grid-template-rows: 0fr;
 }
@@ -538,7 +555,8 @@ html.js [aria-expanded="false"] .faq__icon-closed {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .faq__panel {
+  .faq__panel,
+  .faq__panel p {
     transition: none;
   }
 
@@ -547,10 +565,14 @@ html.js [aria-expanded="false"] .faq__icon-closed {
   }
 }
 
-/* Efeito "Noise" do Figma (ruído escuro 6%) */
+/* Efeito "Noise" do Figma. O SVG exportado (feTurbulence de 1440×2831) renderizava, na
+   prática, um véu uniforme de 1% de preto: o ruído de 6% é recortado pela forma de 1%. Este PNG
+   de 256px é o mesmo filtro renderizado (mesma aparência) e quase não custa para rasterizar; o
+   SVG em ladrilhos gigantes era refeito a cada quadro quando a seção mudava de altura (ex.: FAQ).
+   Sem will-change: medido, a camada própria não muda nada com o ladrilho leve. */
 .paper-grain {
-  background-image: url("/images/textures/grao-de-papel.svg");
-  background-size: 1440px 2831px;
+  background-image: url("/images/textures/grao-de-papel.png");
+  background-size: 256px 256px;
   background-repeat: repeat;
 }
 

@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-import { gsap, prefersReducedMotion, useGSAP } from "@/lib/gsap";
+import { entrancesEnabled, gsap, useGSAP } from "@/lib/gsap";
 import { clearReveal } from "@/lib/reveal";
 
 /**
@@ -15,7 +15,7 @@ export function Footer() {
 
   useGSAP(
     () => {
-      if (prefersReducedMotion() || !document.documentElement.classList.contains("js-ready")) return;
+      if (!entrancesEnabled()) return;
       const q = gsap.utils.selector(footerRef);
       const line = q("[data-footer-line]");
       const texts = q("[data-footer-text]");

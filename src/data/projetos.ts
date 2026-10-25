@@ -29,7 +29,7 @@ export const PROJETOS: Projeto[] = [
     categoria: "Estruturas",
     local: "Condomínio Vitta, Cotia – SP",
     data: "12/2024",
-    fotos: ["/images/projetos/gr001-varanda-com-ripado.png"],
+    fotos: ["/images/projetos/gr001-varanda-com-ripado.jpg"],
     slug: "varanda-com-ripado",
   },
   {
@@ -38,7 +38,7 @@ export const PROJETOS: Projeto[] = [
     categoria: "Vidros",
     local: "Condomínio Vitta, Cotia – SP",
     data: "09/2026",
-    fotos: ["/images/projetos/gr002-canto-de-vidro.png"],
+    fotos: ["/images/projetos/gr002-canto-de-vidro.jpg"],
     slug: "canto-de-vidro",
   },
   {
@@ -47,7 +47,7 @@ export const PROJETOS: Projeto[] = [
     categoria: "Esquadrias",
     local: "Condomínio Vitta, Cotia – SP",
     data: "05/2026",
-    fotos: ["/images/projetos/gr003-porta-de-correr-com-patio.png"],
+    fotos: ["/images/projetos/gr003-porta-de-correr-com-patio.jpg"],
     slug: "porta-de-correr-com-patio",
   },
   {
@@ -56,7 +56,7 @@ export const PROJETOS: Projeto[] = [
     categoria: "Estruturas",
     local: "Condomínio Vitta, Cotia – SP",
     data: "02/2026",
-    fotos: ["/images/projetos/gr004-veneziana-preta.png"],
+    fotos: ["/images/projetos/gr004-veneziana-preta.jpg"],
     slug: "veneziana-preta",
   },
   {
@@ -65,7 +65,7 @@ export const PROJETOS: Projeto[] = [
     categoria: "Coberturas",
     local: "Casa residencial, Osasco – SP",
     data: "06/2024",
-    fotos: ["/images/projetos/gr005-cobertura-de-vidro.png"],
+    fotos: ["/images/projetos/gr005-cobertura-de-vidro.jpg"],
     slug: "cobertura-de-vidro",
   },
 ];

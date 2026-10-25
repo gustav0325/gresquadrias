@@ -7,6 +7,7 @@ import { useRef } from "react";
 import { ScrollIndicator } from "@/components/ui/ScrollIndicator";
 import { SECTION_LINKS } from "@/config/navigation";
 import {
+  entrancesEnabled,
   gsap,
   HERO_INTRO_EVENT,
   type HeroIntroDetail,
@@ -15,6 +16,7 @@ import {
   ScrollTrigger,
   useGSAP,
 } from "@/lib/gsap";
+import { REVEALED, scheduleRefresh } from "@/lib/reveal";
 
 const TITLE_LINES = [
   { text: "Esquadrias que" },
@@ -62,7 +64,6 @@ export function Hero() {
     () => {
       const section = sectionRef.current!;
       const q = gsap.utils.selector(section);
-      const root = document.documentElement;
       const reduce = prefersReducedMotion();
 
       const photo = q('[data-hero-el="image"] img');
@@ -78,7 +79,7 @@ export function Hero() {
       const syncSpin = () => spin?.paused(!(sealInView && introDone));
 
       // ---------------------------------------------------------------- Entrada
-      if (!reduce && root.classList.contains("js-ready")) {
+      if (entrancesEnabled()) {
         const timeScale = window.matchMedia(MOTION_QUERIES.desktop).matches ? 1 : 1.3;
         const ctaIcon = q('[data-hero-el="cta"] > svg');
         const ctaText = q('[data-hero-el="cta"] > span');
@@ -87,17 +88,21 @@ export function Hero() {
         gsap.set(q('[data-hero-el="eyebrow"]'), { opacity: 0, y: 12 });
         gsap.set(q(".hero__title-text"), { opacity: 1, yPercent: 110 });
         gsap.set(q('[data-hero-el="subtitle"]'), { opacity: 0, y: 24 });
-        gsap.set(q('[data-hero-el="divider"]'), { opacity: 1, scaleX: 0, transformOrigin: "0% 50%" });
+        gsap.set(q('[data-hero-el="divider"]'), {
+          opacity: 1,
+          scaleX: 0,
+          transformOrigin: "0% 50%",
+        });
         gsap.set(ctaIcon, { opacity: 0, x: -10 });
         gsap.set(ctaText, { opacity: 0 });
         gsap.set(q(".scroll-seal__ring, .scroll-seal__arrow"), { opacity: 0 });
 
         const intro = gsap.timeline({
           paused: true,
-          // Fim: tira o CSS de espera e os estilos inline (texto rasterizado como na versão estática).
-          // O anel do selo mantém o transform da rotação.
+          // Fim: sai o CSS de espera; os elementos ficam sem transforms (rasterização igual à
+          // versão estática) e visíveis inline. O anel do selo mantém o transform da rotação.
           onComplete: () => {
-            root.classList.remove("js-ready");
+            document.documentElement.classList.remove("js-ready");
             gsap.set(
               [
                 photo,
@@ -108,9 +113,9 @@ export function Hero() {
                 ctaIcon,
                 ctaText,
               ],
-              { clearProps: "transform,transformOrigin,opacity" },
+              REVEALED,
             );
-            gsap.set(q(".scroll-seal__ring, .scroll-seal__arrow"), { clearProps: "opacity" });
+            gsap.set(q(".scroll-seal__ring, .scroll-seal__arrow"), { opacity: 1 });
           },
         });
         intro
@@ -123,21 +128,37 @@ export function Hero() {
             [],
             0.3,
           )
-          .to(q('[data-hero-el="eyebrow"]'), { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.6)
+          .to(
+            q('[data-hero-el="eyebrow"]'),
+            { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" },
+            0.6,
+          )
           .to(
             q(".hero__title-text"),
             { yPercent: 0, duration: 0.75, stagger: 0.12, ease: "power3.out" },
             0.66,
           )
-          .to(q('[data-hero-el="subtitle"]'), { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 1.2)
+          .to(
+            q('[data-hero-el="subtitle"]'),
+            { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
+            1.2,
+          )
           .to(q('[data-hero-el="divider"]'), { scaleX: 1, duration: 0.55, ease: "power3.out" }, 1.5)
           .to(ctaIcon, { opacity: 1, x: 0, duration: 0.55, ease: "power3.out" }, 1.5)
           .to(ctaText, { opacity: 1, duration: 0.55, ease: "power3.out" }, 1.58)
-          .to(q(".scroll-seal__ring, .scroll-seal__arrow"), { opacity: 1, duration: 0.6, ease: "power2.out" }, 1.9)
-          .call(() => {
-            introDone = true;
-            syncSpin();
-          }, [], 1.9)
+          .to(
+            q(".scroll-seal__ring, .scroll-seal__arrow"),
+            { opacity: 1, duration: 0.6, ease: "power2.out" },
+            1.9,
+          )
+          .call(
+            () => {
+              introDone = true;
+              syncSpin();
+            },
+            [],
+            1.9,
+          )
           .timeScale(timeScale);
 
         // `cancelled`: no Strict Mode/desmontagem não inicia uma timeline já revertida
@@ -160,7 +181,9 @@ export function Hero() {
           // Espaço extra de rolagem para o trecho parado (a cortina usa a rolagem normal)
           gsap.set(spacerRef.current, { height: `${HOLD * 100}vh` });
 
-          const scrolled = q('[data-hero-el="image"], [data-hero-el="content"], [data-hero-el="scroll"]');
+          const scrolled = q(
+            '[data-hero-el="image"], [data-hero-el="content"], [data-hero-el="scroll"]',
+          );
           // No topo a Hero fica sem estilos inline, idêntica à versão estática
           // (o translate3d da foto mudaria a rasterização da camada)
           const resetAtTop = () => {
@@ -203,7 +226,10 @@ export function Hero() {
           },
         });
 
-        ScrollTrigger.refresh();
+        // Recalcula fora deste callback: chamado aqui dentro, o refresh dispararia callbacks de
+        // gatilhos de outros componentes (ex.: link ativo da navbar) dentro deste contexto de
+        // matchMedia, e o GSAP os prenderia a ele — a próxima troca de breakpoint os destruiria.
+        scheduleRefresh(0);
         return () => removeRefreshListener?.();
       });
 
@@ -232,11 +258,11 @@ export function Hero() {
         >
           <div className="hero__image absolute inset-0" data-hero-el="image">
             <Image
-              src="/images/hero/hero-fachada.png"
+              src="/images/hero/hero-fachada.jpg"
               alt="Fachada de residência com esquadrias de alumínio e vidro iluminadas ao entardecer"
               fill
               preload
-              quality={85}
+              quality={80}
               sizes="100vw"
               className="object-cover"
             />
@@ -298,8 +324,15 @@ export function Hero() {
             className="hero__cta focus-ring mt-[19px] flex w-fit items-center gap-5 rounded-full md:mt-[clamp(20px,3.5vh,40px)]"
             data-hero-el="cta"
           >
-            {/* Mesmo desenho de /icons/seta-circular.svg, em linha para animar seta e borda no hover */}
-            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true" className="shrink-0">
+            {/* Mesmo desenho do ícone "Seta circular" do Figma, em linha para animar seta e borda no hover */}
+            <svg
+              width="56"
+              height="56"
+              viewBox="0 0 56 56"
+              fill="none"
+              aria-hidden="true"
+              className="shrink-0"
+            >
               <rect
                 className="hero__cta-circle"
                 x="0.5"
@@ -325,10 +358,7 @@ export function Hero() {
           </Link>
         </div>
 
-        <div
-          className="hero__grain pointer-events-none absolute inset-0 z-10"
-          aria-hidden="true"
-        />
+        <div className="hero__grain pointer-events-none absolute inset-0 z-10" aria-hidden="true" />
 
         <ScrollIndicator
           href={SECTION_LINKS.projetos}

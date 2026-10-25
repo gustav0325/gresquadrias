@@ -7,7 +7,8 @@ import { MaskedWords } from "@/components/ui/MaskedWords";
 import { ProjectCard } from "@/components/ui/ProjectCard";
 import { QUOTE_LINK } from "@/config/navigation";
 import { CATEGORIAS, type Categoria, PROJETOS } from "@/data/projetos";
-import { gsap, MOTION_QUERIES, prefersReducedMotion, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { entrancesEnabled, gsap, MOTION_QUERIES, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { REVEALED } from "@/lib/reveal";
 
 const FILTROS = ["Todos", ...CATEGORIAS] as const;
 type Filtro = "Todos" | Categoria;
@@ -49,7 +50,8 @@ export function Projects() {
   const refreshTimer = useRef(0);
   const filtroMudou = useRef(false);
 
-  // Recalcula os gatilhos depois que fotos carregam ou o filtro muda a altura da grade
+  // Recalcula os gatilhos quando o filtro (mobile) muda a altura da grade.
+  // Fotos não: as molduras têm proporção fixa, carregar não muda o layout.
   const refreshSoon = useCallback(() => {
     window.clearTimeout(refreshTimer.current);
     refreshTimer.current = window.setTimeout(() => ScrollTrigger.refresh(), 200);
@@ -68,7 +70,7 @@ export function Projects() {
       const q = gsap.utils.selector(section);
 
       // ------------------------------------------------------------ Entradas
-      if (!prefersReducedMotion() && document.documentElement.classList.contains("js-ready")) {
+      if (entrancesEnabled()) {
         // Mobile: mais rápido e mais discreto
         const desktop = window.matchMedia(MOTION_QUERIES.desktop).matches;
         const k = desktop ? 1 : 0.75;
@@ -76,7 +78,7 @@ export function Projects() {
         const lines = (title: string) => q(`${title} [data-line]`);
         // Fim de cada entrada: sem estilos inline, igual à versão estática
         const clear = (targets: gsap.TweenTarget) => () =>
-          gsap.set(targets, { clearProps: "transform,opacity,clipPath" });
+          gsap.set(targets, REVEALED);
 
         // Cabeçalho
         const eyebrow = q('[data-projects-el="eyebrow"]');
@@ -86,11 +88,18 @@ export function Projects() {
         gsap.set(intro, { opacity: 0, y: 20 * k });
         gsap.set(titleWords, { opacity: 1, yPercent: WORD_HIDDEN_Y });
         const header = gsap.timeline({
-          scrollTrigger: { trigger: q('[data-projects-el="header"]')[0], start: "top 80%", once: true },
+          scrollTrigger: {
+            trigger: q('[data-projects-el="header"]')[0],
+            start: "top 80%",
+            once: true,
+          },
           onComplete: clear([eyebrow, intro, titleWords]),
         });
         header.to(eyebrow, { opacity: 1, y: 0, duration: 0.6 * k, ease: "power2.out" }, 0);
-        revealLines(header, lines('[data-projects-el="title"]'), 0.1, { duration: 0.9 * k, stagger: 0.15 });
+        revealLines(header, lines('[data-projects-el="title"]'), 0.1, {
+          duration: 0.9 * k,
+          stagger: 0.15,
+        });
         header.to(intro, { opacity: 1, y: 0, duration: 0.7 * k, ease: "power2.out" }, 0.35 * k);
 
         // Fotos: moldura abre de baixo para cima, a foto assenta (1.05 → 1) e a legenda vem em seguida
@@ -108,7 +117,11 @@ export function Projects() {
             })
             .to(frame, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1 * k, ease: "power3.out" }, 0)
             .to(reveal, { scale: 1, duration: 1.1 * k, ease: "power3.out" }, 0)
-            .to(caption, { opacity: 1, y: 0, duration: 0.6 * k, stagger: 0.08, ease: "power2.out" }, 0.3 * k);
+            .to(
+              caption,
+              { opacity: 1, y: 0, duration: 0.6 * k, stagger: 0.08, ease: "power2.out" },
+              0.3 * k,
+            );
         });
 
         // CTA: rótulo, linhas do título e botão, 0,15 s entre eles
@@ -120,7 +133,11 @@ export function Projects() {
         gsap.set(ctaWords, { opacity: 1, yPercent: WORD_HIDDEN_Y });
         gsap.set(ctaButton, { opacity: 0, y: 16 * k });
         const cta = gsap.timeline({
-          scrollTrigger: { trigger: q('[data-projects-el="cta"]')[0], start: "top 80%", once: true },
+          scrollTrigger: {
+            trigger: q('[data-projects-el="cta"]')[0],
+            start: "top 80%",
+            once: true,
+          },
           onComplete: clear([ctaEyebrow, ctaWords, ctaButton]),
         });
         cta.to(ctaEyebrow, { opacity: 1, duration: 0.6 * k, ease: "power2.out" }, 0);
@@ -199,13 +216,11 @@ export function Projects() {
             data-projects-el="intro"
           >
             <span className="md:hidden">
-              Cada obra nasce de uma medida, de um desenho e de um cuidado que não aparece na
-              foto.
+              Cada obra nasce de uma medida, de um desenho e de um cuidado que não aparece na foto.
             </span>
             <span className="hidden md:inline">
-              Cada obra nasce de uma medida, de um desenho e de um cuidado que não aparece na
-              foto, mas que você sente todo dia: o vão que desliza leve, o vidro que fecha sem
-              ruído.
+              Cada obra nasce de uma medida, de um desenho e de um cuidado que não aparece na foto,
+              mas que você sente todo dia: o vão que desliza leve, o vidro que fecha sem ruído.
             </span>
           </p>
         </div>
@@ -247,12 +262,7 @@ export function Projects() {
                 key={projeto.id}
                 className={`${offset ? "md:relative md:top-[min(120px,8.33vw)]" : ""} ${visivel(projeto.categoria) ? "" : "max-md:hidden"}`}
               >
-                <ProjectCard
-                  projeto={projeto}
-                  offset={offset}
-                  eager={i === 0}
-                  onImageLoad={refreshSoon}
-                />
+                <ProjectCard projeto={projeto} offset={offset} />
               </li>
             );
           })}
@@ -267,7 +277,11 @@ export function Projects() {
       </p>
 
       {/* CTA */}
-      <div className="bg-night px-(--gutter) pb-16 md:pb-[clamp(56px,11vh,104px)]" data-projects-el="cta" data-nav-tone="dark">
+      <div
+        className="bg-night px-(--gutter) pb-16 md:pb-[clamp(56px,11vh,104px)]"
+        data-projects-el="cta"
+        data-nav-tone="dark"
+      >
         <div className="h-px bg-white/14" />
         {/* md+: grade em que o botão fica na linha do título, centralizado na vertical em relação a ele */}
         <div className="mt-10 flex flex-col gap-8 md:mt-[clamp(56px,11vh,104px)] md:grid md:grid-cols-[1fr_auto] md:gap-x-8 md:gap-y-6">

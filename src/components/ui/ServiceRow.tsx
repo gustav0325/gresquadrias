@@ -9,7 +9,6 @@ type ServiceRowProps = {
   servico: Servico;
   /** Linhas pares (01, 03): fundo greige e foto à direita no desktop. */
   index: number;
-  onImageLoad?: () => void;
 };
 
 /**
@@ -19,7 +18,7 @@ type ServiceRowProps = {
  * moldura (clip-path da revelação) › reveal (scale) › parallax (y) › <img> (scale do hover).
  * A camada do parallax só ganha sobra de altura enquanto o parallax está ativo (Services.tsx).
  */
-export function ServiceRow({ servico, index, onImageLoad }: ServiceRowProps) {
+export function ServiceRow({ servico, index }: ServiceRowProps) {
   const destaque = index % 2 === 0;
   const titulo = servico.titulo.join(" ");
 
@@ -39,10 +38,9 @@ export function ServiceRow({ servico, index, onImageLoad }: ServiceRowProps) {
               src={servico.imagem.src}
               alt={servico.imagem.alt}
               fill
-              quality={85}
+              quality={80}
               sizes="(min-width: 1024px) 46vw, calc(100vw - 40px)"
               className="service-row__img object-cover"
-              onLoad={onImageLoad}
             />
           </div>
         </div>

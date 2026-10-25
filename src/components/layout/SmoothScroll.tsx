@@ -21,6 +21,8 @@ function focusSection(section: HTMLElement | null) {
  * Âncoras da própria página ("/#projetos", "#top"…) são roladas pelo Lenis:
  * a posição vem do layout real, então já considera o espaço da Hero fixa.
  * Com prefers-reduced-motion: reduce o Lenis não é criado (rolagem e âncoras nativas).
+ * Em telas de toque também não: a rolagem por toque já é nativa (o Lenis só suaviza a roda do
+ * mouse) e ele só custaria um loop por quadro; as âncoras usam a rolagem suave nativa.
  */
 export function SmoothScroll() {
   useEffect(() => {
@@ -32,11 +34,14 @@ export function SmoothScroll() {
 
     if (prefersReducedMotion()) return;
 
-    const lenis = new Lenis({ autoRaf: false, duration: 1.1 });
-    const raf = (time: number) => lenis.raf(time * 1000);
-    lenis.on("scroll", ScrollTrigger.update);
-    gsap.ticker.add(raf);
-    gsap.ticker.lagSmoothing(0);
+    const touch = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+    const lenis = touch ? null : new Lenis({ autoRaf: false, duration: 1.1 });
+    const raf = (time: number) => lenis?.raf(time * 1000);
+    if (lenis) {
+      lenis.on("scroll", ScrollTrigger.update);
+      gsap.ticker.add(raf);
+      gsap.ticker.lagSmoothing(0);
+    }
 
     // Captura: roda antes do <Link> do Next, que respeita o preventDefault
     const onClick = (event: MouseEvent) => {
@@ -55,15 +60,23 @@ export function SmoothScroll() {
 
       event.preventDefault();
       // Offset 0: as seções já reservam no padding-top o espaço da navbar fixa
-      lenis.scrollTo(section ?? 0, { onComplete: () => focusSection(section) });
+      if (lenis) {
+        lenis.scrollTo(section ?? 0, { onComplete: () => focusSection(section) });
+      } else {
+        const top = section ? section.getBoundingClientRect().top + window.scrollY : 0;
+        window.scrollTo({ top, behavior: "smooth" });
+        focusSection(section);
+      }
     };
     document.addEventListener("click", onClick, true);
 
     return () => {
       document.removeEventListener("click", onClick, true);
-      gsap.ticker.remove(raf);
-      gsap.ticker.lagSmoothing(500, 33);
-      lenis.destroy();
+      if (lenis) {
+        gsap.ticker.remove(raf);
+        gsap.ticker.lagSmoothing(500, 33);
+        lenis.destroy();
+      }
     };
   }, []);
 

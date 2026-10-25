@@ -5,12 +5,21 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 
 import { NAV_LINKS, QUOTE_LINK } from "@/config/navigation";
-import { gsap, HERO_INTRO_EVENT, type HeroIntroDetail, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import {
+  entrancesEnabled,
+  gsap,
+  HERO_INTRO_EVENT,
+  type HeroIntroDetail,
+  ScrollTrigger,
+  useGSAP,
+} from "@/lib/gsap";
 
 /** Seções na ordem da página; a Hero ("inicio") não tem link. */
 const SECTION_IDS = ["inicio", ...NAV_LINKS.map((link) => link.href.split("#")[1])];
 /** Se a Hero não comandar a entrada (erro, foto travada), a navbar aparece mesmo assim. */
 const INTRO_FALLBACK_MS = 4500;
+/** A entrada da navbar acontece uma única vez por carregamento da página. */
+let introPlayed = false;
 
 /**
  * Navbar fixa em cápsula de vidro.
@@ -27,31 +36,48 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
 
   useGSAP(
-    (_, contextSafe) => {
+    (context) => {
       const header = headerRef.current!;
       const nav = navRef.current!;
       // Linha de referência: meio da cápsula
       const probe = () => header.getBoundingClientRect().top + header.offsetHeight / 2;
 
-      // Entrada: a Hero avisa quando a navbar deve entrar (0,3 s na timeline dela)
+      // Entrada: dona única é este componente; a Hero só avisa quando começar (0,3 s na
+      // timeline dela). Roda uma vez: estados claro/escuro, link ativo e refresh nunca a refazem.
+      // A tween é criada FORA de qualquer contexto do GSAP (ignore): o aviso chega por um
+      // callback da timeline da Hero, que o GSAP executa no contexto dela; registrada lá, a
+      // tween seria desfeita por um revert de matchMedia ao redimensionar (navbar sumia).
       let fallback = 0;
-      const onIntro = contextSafe!((event: Event) => {
+      const onIntro = (event: Event) => {
+        if (introPlayed) return;
+        introPlayed = true;
         const { timeScale } = (event as CustomEvent<HeroIntroDetail>).detail;
         window.clearTimeout(fallback);
-        gsap.to(nav, {
-          opacity: 1,
-          y: 0,
-          duration: 0.7 / timeScale,
-          ease: "power3.out",
-          overwrite: true,
-          clearProps: "transform,opacity",
+        context.ignore(() => {
+          gsap.fromTo(
+            nav,
+            { opacity: 0, y: -24 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.7 / timeScale,
+              ease: "power3.out",
+              immediateRender: false,
+              overwrite: "auto",
+              // Fica visível inline (o CSS de espera pode ainda existir); só o transform sai
+              clearProps: "transform",
+            },
+          );
         });
-      });
-      if (document.documentElement.classList.contains("js-ready")) {
+      };
+      if (entrancesEnabled() && !introPlayed) {
         gsap.set(nav, { opacity: 0, y: -24 });
         window.addEventListener(HERO_INTRO_EVENT, onIntro);
         fallback = window.setTimeout(
-          () => onIntro(new CustomEvent<HeroIntroDetail>(HERO_INTRO_EVENT, { detail: { timeScale: 1 } })),
+          () =>
+            onIntro(
+              new CustomEvent<HeroIntroDetail>(HERO_INTRO_EVENT, { detail: { timeScale: 1 } }),
+            ),
           INTRO_FALLBACK_MS,
         );
       }
@@ -83,7 +109,11 @@ export function Navbar() {
       });
 
       // Depois de sair do topo: cápsula um pouco mais sólida (globals.css)
-      ScrollTrigger.create({ start: 1, end: "max", onToggle: (self) => setScrolled(self.isActive) });
+      ScrollTrigger.create({
+        start: 1,
+        end: "max",
+        onToggle: (self) => setScrolled(self.isActive),
+      });
 
       return () => {
         window.clearTimeout(fallback);

@@ -9,8 +9,8 @@ import { ServiceRow } from "@/components/ui/ServiceRow";
 import { WHATSAPP_URL } from "@/config/contato";
 import { FAQ } from "@/data/faq";
 import { ETAPAS, SERVICOS } from "@/data/servicos";
-import { gsap, MOTION_QUERIES, prefersReducedMotion, useGSAP } from "@/lib/gsap";
-import { clearReveal, scheduleRefresh, WORD_HIDDEN_Y, wordLines } from "@/lib/reveal";
+import { entrancesEnabled, gsap, MOTION_QUERIES, useGSAP } from "@/lib/gsap";
+import { clearReveal, WORD_HIDDEN_Y, wordLines } from "@/lib/reveal";
 
 /** Sobra da camada do parallax (cada lado, % da moldura) — só enquanto o parallax está ativo. */
 const PARALLAX_BLEED = "-5%";
@@ -37,7 +37,7 @@ export function Services() {
       const q = gsap.utils.selector(section);
 
       // Entradas só com movimento permitido e com o estado de espera ativo (html.js-ready)
-      const revealOn = !prefersReducedMotion() && document.documentElement.classList.contains("js-ready");
+      const revealOn = entrancesEnabled();
       if (revealOn) {
         // Mobile: entradas mais curtas e zoom menor
         const desktop = window.matchMedia(MOTION_QUERIES.desktop).matches;
@@ -49,8 +49,13 @@ export function Services() {
           });
         const hideLines = (lines: Element[]) =>
           gsap.set(lines, { opacity: 1, scaleX: 0, transformOrigin: "0% 50%" });
+        // Leituras de layout antes de qualquer escrita: as linhas reais de todos os títulos
+        // são medidas de uma vez (medir depois de cada gsap.set forçaria um layout por título)
+        const titleLines = new Map<Element, HTMLElement[][]>(
+          q('[data-masked-title], [data-service-el="title"]').map((t) => [t, wordLines(t)] as const),
+        );
         const hideWords = (title: Element | undefined) => {
-          const lines = wordLines(title);
+          const lines = (title && titleLines.get(title)) || wordLines(title);
           gsap.set(lines.flat(), { opacity: 1, yPercent: WORD_HIDDEN_Y });
           return lines;
         };
@@ -62,7 +67,11 @@ export function Services() {
           stagger: number,
         ) =>
           lines.forEach((words, i) =>
-            tl.to(words, { yPercent: 0, duration: duration * k, ease: "power3.out" }, at + i * stagger),
+            tl.to(
+              words,
+              { yPercent: 0, duration: duration * k, ease: "power3.out" },
+              at + i * stagger,
+            ),
           );
 
         // Eyebrow + título com máscara + texto (cabeçalho e FAQ seguem o mesmo desenho)
@@ -110,13 +119,32 @@ export function Services() {
           const titleEnd = 0.12 + (lines.length - 1) * 0.12 + 0.85 * k;
           const descriptionAt = titleEnd - 0.3;
           const pillsAt = descriptionAt + 0.3;
-          const tl = once(text, "top 75%", [number, numberLine, lines.flat(), description, label, pills, link]);
-          tl.to(number, { opacity: 1, y: 0, duration: 0.5 * k, ease: "power2.out" }, 0)
-            .to(numberLine, { scaleX: 1, duration: 0.6 * k, ease: "power3.out" }, 0.05);
+          const tl = once(text, "top 75%", [
+            number,
+            numberLine,
+            lines.flat(),
+            description,
+            label,
+            pills,
+            link,
+          ]);
+          tl.to(number, { opacity: 1, y: 0, duration: 0.5 * k, ease: "power2.out" }, 0).to(
+            numberLine,
+            { scaleX: 1, duration: 0.6 * k, ease: "power3.out" },
+            0.05,
+          );
           revealWords(tl, lines, 0.12, 0.85, 0.12);
-          tl.to(description, { opacity: 1, y: 0, duration: 0.65 * k, ease: "power2.out" }, descriptionAt)
+          tl.to(
+            description,
+            { opacity: 1, y: 0, duration: 0.65 * k, ease: "power2.out" },
+            descriptionAt,
+          )
             .to(label, { opacity: 1, duration: 0.5 * k, ease: "power2.out" }, pillsAt - 0.1)
-            .to(pills, { opacity: 1, y: 0, duration: 0.5 * k, stagger: 0.08, ease: "power2.out" }, pillsAt)
+            .to(
+              pills,
+              { opacity: 1, y: 0, duration: 0.5 * k, stagger: 0.08, ease: "power2.out" },
+              pillsAt,
+            )
             .to(
               link,
               { opacity: 1, y: 0, duration: 0.5 * k, ease: "power2.out" },
@@ -129,7 +157,11 @@ export function Services() {
           gsap.set(frame ?? [], { clipPath: "inset(100% 0% 0% 0%)" });
           gsap.set(reveal, { scale: desktop ? 1.05 : 1.03 });
           once(frame, "top 85%", [frame ?? [], reveal])
-            .to(frame ?? [], { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1 * k, ease: "power3.out" }, 0)
+            .to(
+              frame ?? [],
+              { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1 * k, ease: "power3.out" },
+              0,
+            )
             .to(reveal, { scale: 1, duration: 1.1 * k, ease: "power3.out" }, 0);
         });
 
@@ -156,11 +188,24 @@ export function Services() {
           gsap.set(footer, { opacity: 0 });
           faqHeader
             .to(rules, { scaleX: 1, duration: 0.6 * k, stagger: 0.08, ease: "power3.out" }, 0.3)
-            .to(items, { opacity: 1, y: 0, duration: 0.6 * k, stagger: 0.08, ease: "power2.out" }, 0.35)
-            .to(footer, { opacity: 1, duration: 0.6 * k, ease: "power2.out" }, 0.35 + items.length * 0.08 + 0.2)
+            .to(
+              items,
+              { opacity: 1, y: 0, duration: 0.6 * k, stagger: 0.08, ease: "power2.out" },
+              0.35,
+            )
+            .to(
+              footer,
+              { opacity: 1, duration: 0.6 * k, ease: "power2.out" },
+              0.35 + items.length * 0.08 + 0.2,
+            )
             .eventCallback(
               "onComplete",
-              clearReveal([...faq.querySelectorAll("[data-eyebrow-text], [data-word]"), rules, items, footer]),
+              clearReveal([
+                ...faq.querySelectorAll("[data-eyebrow-text], [data-word]"),
+                rules,
+                items,
+                footer,
+              ]),
             );
         }
       }
@@ -203,6 +248,11 @@ export function Services() {
         mm.add(MOTION_QUERIES.desktop, () => {
           const list = q("[data-steps]")[0];
           const listBox = list.getBoundingClientRect();
+          // Posição horizontal de cada coluna (0, ~26%, ~52%, ~78% da largura), medida antes
+          // de qualquer escrita
+          const columns = steps.map(
+            (step) => (step.getBoundingClientRect().left - listBox.left) / listBox.width,
+          );
           gsap.set(fill, { scaleX: 0, transformOrigin: "0% 50%" });
           const tl = gsap.timeline({
             defaults: { ease: "none", duration: STEP_DURATION },
@@ -214,12 +264,11 @@ export function Services() {
               invalidateOnRefresh: true,
             },
           });
-          steps.forEach((step) => {
+          steps.forEach((step, i) => {
             const { number, line, title, text } = parts(step);
             gsap.set([number, line, title, text], { opacity: 0, x: -16 });
             gsap.set(line, { scaleX: 0, transformOrigin: "0% 50%" });
-            // Posição horizontal da coluna (0, ~26%, ~52%, ~78% da largura)
-            const at = (step.getBoundingClientRect().left - listBox.left) / listBox.width;
+            const at = columns[i];
             tl.to([number, line], { opacity: 1, x: 0 }, at)
               .to(line, { scaleX: 1 }, at)
               .to(title, { opacity: 1, x: 0 }, at + 0.03)
@@ -246,7 +295,11 @@ export function Services() {
                 scrollTrigger: { trigger: step, start: "top 85%", once: true },
                 onComplete: clearReveal([number, line, title, text]),
               })
-              .to([number, title, text], { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, ease: "power2.out" }, 0)
+              .to(
+                [number, title, text],
+                { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, ease: "power2.out" },
+                0,
+              )
               .to(line, { scaleX: 1, duration: 0.6, ease: "power2.out" }, 0.05);
           });
         });
@@ -272,7 +325,10 @@ export function Services() {
       </div>
 
       {/* Cabeçalho */}
-      <header className="px-(--gutter) pt-[116px] pb-14 md:pt-[max(clamp(88px,13vh,132px),calc(var(--nav-offset)+24px))] md:pb-24" data-services-el="header">
+      <header
+        className="px-(--gutter) pt-[116px] pb-14 md:pt-[max(clamp(88px,13vh,132px),calc(var(--nav-offset)+24px))] md:pb-24"
+        data-services-el="header"
+      >
         <p className="flex items-center gap-3 md:gap-4" data-services-el="eyebrow">
           <span
             className="text-[11px] leading-[normal] font-medium tracking-[0.14em] text-bronze-deep md:text-[12px]"
@@ -281,7 +337,12 @@ export function Services() {
           >
             SERVIÇOS
           </span>
-          <span aria-hidden="true" className="h-px w-12 bg-line md:w-20" data-reveal data-eyebrow-line />
+          <span
+            aria-hidden="true"
+            className="h-px w-12 bg-line md:w-20"
+            data-reveal
+            data-eyebrow-line
+          />
         </p>
         <h2
           id="servicos-title"
@@ -302,7 +363,7 @@ export function Services() {
       </header>
 
       {SERVICOS.map((servico, i) => (
-        <ServiceRow key={servico.numero} servico={servico} index={i} onImageLoad={scheduleRefresh} />
+        <ServiceRow key={servico.numero} servico={servico} index={i} />
       ))}
 
       {/* Como trabalhamos */}
@@ -400,10 +461,7 @@ export function Services() {
         </p>
       </section>
 
-      <div
-        aria-hidden="true"
-        className="paper-grain pointer-events-none absolute inset-0 z-10"
-      />
+      <div aria-hidden="true" className="paper-grain pointer-events-none absolute inset-0 z-10" />
     </section>
   );
 }

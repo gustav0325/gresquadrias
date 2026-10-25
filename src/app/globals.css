@@ -1,26 +1,716 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ------------------------------------------------------------------
+ * Design tokens (extraídos do Figma — GrEsquadrias)
+ * ------------------------------------------------------------------ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bronze: #c69a6b; /* accent/bronze */
+  --color-paper: #f3f0ea; /* text/primary (off-white) */
+  --color-ink: #0a0a0b; /* preto quente */
+  --color-ink-warm: #0c0a09; /* fundo da Hero mobile */
+  --color-sand: #f6f3ed; /* fundo claro dos frames */
+
+  /* Seções claras (Projetos e seguintes) */
+  --color-linen: #f9f6f0; /* off-white — topo do degradê base */
+  --color-linen-deep: #f4f0e9; /* off-white — base do degradê */
+  --color-greige: #e7e1d7; /* fundo da grade de projetos */
+  --color-night: #13100e; /* bloco do CTA */
+  --color-bronze-deep: #996e40; /* textos pequenos em bronze */
+  --color-espresso: #15110e; /* texto escuro */
+  --color-taupe: #6b655c; /* texto secundário */
+  --color-cocoa: #403b33; /* texto de apoio (Sobre) */
+  /* Variações AA (≥ 4.5:1) para texto pequeno sobre os brilhos — usadas no Sobre */
+  --color-bronze-text: #815c36;
+  --color-taupe-text: #676159;
+  --color-bronze-text-greige: #7c5934; /* bronze AA para texto pequeno sobre o greige (Contato) */
+  --color-line: rgb(26 18 10 / 0.15); /* divisores sobre fundo claro */
+
+  --font-sans: var(--font-inter), var(--font-inter-arrows);
+  --font-display: var(--font-cormorant);
 }
 
-@media (prefers-color-scheme: dark) {
+/* Margem lateral única: navbar, Hero e selo */
+:root {
+  --gutter: clamp(20px, 3.4vw, 48px);
+  --nav-pad-l: 16px; /* padding interno da cápsula (mobile) */
+  --nav-pad-r: 20px;
+  --content-x: var(--gutter);
+}
+
+@media (min-width: 48rem) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Texto na mesma vertical do logo: margem + borda da cápsula + padding */
+    --content-x: calc(var(--gutter) + 1px + var(--nav-pad-l));
   }
 }
 
+@media (min-width: 64rem) {
+  :root {
+    --nav-pad-l: 24px; /* cápsula desktop */
+    --nav-pad-r: 14px;
+  }
+}
+
+/* Espaço ocupado pela navbar fixa (top + altura da cápsula) */
+:root {
+  --nav-offset: 68px; /* 16 + 52 */
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --nav-offset: 93px; /* 24 + 69 */
+  }
+}
+
+/* ------------------------------------------------------------------
+ * Navbar fixa: tom escuro sobre a Hero, tom claro no resto (Figma 74:8 / 74:154)
+ * ------------------------------------------------------------------ */
+.navbar {
+  --nav-bg: rgb(13 10 9 / 0.35);
+  --nav-border: rgb(255 255 255 / 0.22);
+  --nav-fg: var(--color-paper);
+  --nav-btn-fg: var(--color-paper);
+  --nav-blur: 12px;
+  --nav-line: var(--color-bronze); /* linha do hover / link ativo */
+  --nav-active: var(--color-bronze);
+}
+
+@media (min-width: 64rem) {
+  .navbar {
+    --nav-bg: rgb(255 255 255 / 0.07);
+  }
+}
+
+.navbar[data-tone="light"] {
+  --nav-bg: rgb(255 251 245 / 0.7);
+  --nav-border: rgb(26 18 10 / 0.16);
+  --nav-fg: var(--color-espresso);
+  --nav-btn-fg: var(--color-espresso);
+  --nav-line: var(--color-bronze-deep);
+  --nav-active: var(--color-bronze-deep);
+}
+
+/* Depois de sair do topo: blur um pouco maior; sobre a Hero, vidro um pouco mais sólido */
+.navbar[data-scrolled] {
+  --nav-blur: 16px;
+}
+
+.navbar[data-scrolled]:not([data-tone="light"]) {
+  --nav-bg: rgb(13 10 9 / 0.42);
+  --nav-border: rgb(255 255 255 / 0.26);
+}
+
+@media (min-width: 64rem) {
+  .navbar[data-scrolled]:not([data-tone="light"]) {
+    --nav-bg: rgb(255 255 255 / 0.1);
+  }
+}
+
+.navbar[data-tone="light"] .navbar__logo--dark,
+.navbar:not([data-tone="light"]) .navbar__logo--light {
+  display: none;
+}
+
+/* Links: linha bronze entra da esquerda no hover e sai pela direita; o link ativo a mantém */
+.navbar__link {
+  position: relative;
+}
+
+.navbar__link[aria-current] {
+  color: var(--nav-active);
+}
+
+.navbar__link::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -2px;
+  height: 1px;
+  background: var(--nav-line);
+  transform: scaleX(0);
+  transform-origin: 100% 50%;
+  transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1); /* power2.out */
+}
+
+.navbar__link:hover::after,
+.navbar__link:focus-visible::after,
+.navbar__link[aria-current]::after {
+  transform: scaleX(1);
+  transform-origin: 0% 50%;
+}
+
+/* Orçamento: bronze um pouco mais claro e seta para cima/direita, sem mudar o tamanho */
+.navbar__quote {
+  position: relative;
+  isolation: isolate;
+}
+
+.navbar__quote::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-image: linear-gradient(153.514deg, #d4aa7a 0%, #a97d55 74.074%);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.navbar__quote-arrow {
+  transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.navbar__quote:hover::before,
+.navbar__quote:focus-visible::before {
+  opacity: 1;
+}
+
+.navbar__quote:hover .navbar__quote-arrow,
+.navbar__quote:focus-visible .navbar__quote-arrow {
+  transform: translate(4px, -4px);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-sand);
+  color: var(--color-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: clip;
+}
+
+/* ------------------------------------------------------------------
+ * Componentes reutilizáveis
+ * ------------------------------------------------------------------ */
+@layer components {
+  /* Botão bronze em cápsula (Orçamento / Pedir orçamento) */
+  .btn-bronze {
+    background-image: linear-gradient(153.514deg, #cca170 0%, #9e734d 74.074%);
+  }
+
+  .focus-ring {
+    @apply outline-offset-4 outline-bronze focus-visible:outline-2;
+  }
+}
+
+/* ------------------------------------------------------------------
+ * Hero
+ * ------------------------------------------------------------------ */
+.hero {
+  /* Exatamente a altura da janela (100vh como fallback de 100svh) */
+  height: 100vh;
+  min-height: 560px;
+
+  /* Desktop (md+): respiro inferior do conteúdo e base do selo */
+  --hero-pb: clamp(48px, 8vh, 72px);
+}
+
+@supports (height: 100svh) {
+  .hero {
+    height: 100svh;
+  }
+}
+
+/* ------------------------------------------------------------------
+ * Hero — camadas de imagem
+ * Degradês em CSS puro para manter a interpolação sRGB do Figma.
+ * ------------------------------------------------------------------ */
+.hero__tone {
+  background: rgb(11 23 48 / 0.08);
+  mix-blend-mode: multiply;
+}
+
+.hero__shade-left {
+  background: linear-gradient(
+    to right,
+    rgb(10 10 11 / 0.82) 0%,
+    rgb(10 10 11 / 0.5) 34%,
+    rgb(10 10 11 / 0) 62%
+  );
+}
+
+.hero__shade-bottom {
+  background: linear-gradient(
+    to bottom,
+    rgb(10 10 11 / 0) 62%,
+    rgb(10 10 11 / 0.9) 90%,
+    #0a0a0b 100%
+  );
+}
+
+.hero__shade-top {
+  background: linear-gradient(to bottom, rgb(10 10 11 / 0.5) 0%, rgb(10 10 11 / 0) 16%);
+}
+
+/* Apenas mobile: escurece a base da foto sob o bloco de texto */
+.hero__shade-text {
+  background: linear-gradient(
+    180deg,
+    rgb(12 10 9 / 0) 0%,
+    rgb(12 10 9 / 0.78) 50%,
+    rgb(12 10 9 / 0.96) 80%,
+    rgb(12 10 9) 100%
+  );
+}
+
+/* Faixa inferior que antecipa a seção clara seguinte */
+.hero__reveal {
+  background: linear-gradient(
+    to bottom,
+    rgb(246 243 237 / 0) 0%,
+    rgb(246 243 237 / 0.04) 74.416%,
+    rgb(246 243 237 / 0.17) 152.73%
+  );
+}
+
+/* Efeito "Noise" do Figma (ruído branco 6%), exportado como SVG */
+.hero__grain {
+  background-image: url("/images/hero/grao-de-filme.svg");
+  background-size: 1440px 1024px;
+  background-repeat: repeat;
+}
+
+/* Máscara de cada linha do título (revelação linha a linha).
+   O respiro vertical evita cortar ascendentes/descendentes (ç, p, q).
+   O título é flex em coluna para que as margens negativas não colapsem. */
+.hero__title-line {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.12em;
+  margin-block: -0.12em;
+}
+
+.hero__title-text {
+  display: block;
+}
+
+/* "Ver projetos": seta avança e a borda do círculo ganha bronze */
+.hero__cta-circle {
+  transition:
+    stroke 0.35s cubic-bezier(0.33, 1, 0.68, 1),
+    stroke-opacity 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.hero__cta-arrow {
+  transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.hero__cta:hover .hero__cta-circle,
+.hero__cta:focus-visible .hero__cta-circle {
+  stroke: var(--color-bronze);
+  stroke-opacity: 1;
+}
+
+.hero__cta:hover .hero__cta-arrow,
+.hero__cta:focus-visible .hero__cta-arrow {
+  transform: translateX(4px);
+}
+
+/* ------------------------------------------------------------------
+ * Entrada da Hero e da navbar: estado de espera.
+ * `html.js-ready` vem de um script no <head> (layout.tsx) e só existe com JS e sem
+ * reduced-motion; o GSAP assume com estilos inline e remove a classe no fim.
+ * ------------------------------------------------------------------ */
+html.js-ready [data-navbar] > nav,
+html.js-ready [data-hero-el="image"] img,
+html.js-ready [data-hero-el="eyebrow"],
+html.js-ready .hero__title-text,
+html.js-ready [data-hero-el="subtitle"],
+html.js-ready [data-hero-el="divider"],
+html.js-ready [data-hero-el="cta"] > *,
+html.js-ready .scroll-seal__ring,
+html.js-ready .scroll-seal__arrow {
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------
+ * Selo "Role a tela" — 28 posições de 360/28° em volta do círculo
+ * ------------------------------------------------------------------ */
+.scroll-seal {
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.55);
+}
+
+.scroll-seal__char {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 50%;
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) rotate(calc(var(--i) * 360deg / 28));
+  line-height: normal;
+}
+
+/* ------------------------------------------------------------------
+ * Títulos com máscara por palavra (gancho para animação futura).
+ * O respiro compensado não altera o layout nem corta ç, p, q.
+ * ------------------------------------------------------------------ */
+.word-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding: 0.12em 0.04em;
+  margin: -0.12em -0.04em;
+}
+
+.word {
+  display: inline-block;
+}
+
+/* ------------------------------------------------------------------
+ * Projetos — Figma "2 · Projetos" (101:91 / 101:730)
+ * ------------------------------------------------------------------ */
+.projects {
+  background: linear-gradient(to bottom, var(--color-linen), var(--color-linen-deep));
+}
+
+/* "Brilho branco" — elipse radial no canto superior esquerdo */
+.projects__glow {
+  background: radial-gradient(
+    closest-side,
+    rgb(255 255 250 / 0.75),
+    rgb(255 255 250 / 0)
+  );
+}
+
+/* Efeito "Noise" do Figma (ruído escuro 6%), exportado como SVG */
+.projects__grain {
+  background-image: url("/images/textures/grao-de-papel.svg");
+  background-size: 1440px 2831px;
+  background-repeat: repeat;
+}
+
+.projects__filters {
+  scrollbar-width: none;
+}
+
+.projects__filters::-webkit-scrollbar {
+  display: none;
+}
+
+/* Entradas de Projetos: estado de espera (ver "Entrada da Hero e da navbar") */
+html.js-ready .projects [data-projects-el="eyebrow"],
+html.js-ready .projects [data-projects-el="intro"],
+html.js-ready .projects [data-word],
+html.js-ready .projects [data-card-reveal],
+html.js-ready .projects [data-projects-el="cta-eyebrow"],
+html.js-ready .projects [data-projects-el="cta-button"] {
+  opacity: 0;
+}
+
+html.js-ready .projects [data-card-el="frame"] {
+  clip-path: inset(100% 0 0 0);
+}
+
+/* Hover da foto (Projetos e Serviços): zoom leve dentro da moldura (só com mouse e sem reduced-motion) */
+.project-card__img,
+.service-row__img {
+  transition: transform 0.8s cubic-bezier(0.33, 1, 0.68, 1); /* power2.out */
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .project-card__frame:hover .project-card__img,
+  .service-row__photo:hover .service-row__img {
+    transform: scale(1.035);
+  }
+}
+
+/* Link com sublinhado bronze da esquerda para a direita e seta para cima/direita */
+.link-line {
+  position: relative;
+}
+
+.link-line::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -2px;
+  height: 1px;
+  background: var(--link-line, currentColor);
+  transform: scaleX(0);
+  transform-origin: 100% 50%;
+  transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.link-line__arrow {
+  display: inline-block;
+  transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@media (hover: hover) {
+  .link-line:hover::after {
+    transform: scaleX(1);
+    transform-origin: 0% 50%;
+  }
+
+  .link-line:hover .link-line__arrow {
+    transform: translate(4px, -4px);
+  }
+}
+
+/* ------------------------------------------------------------------
+ * Serviços — Figma "3 · Serviços" (101:234 / 101:862)
+ * ------------------------------------------------------------------ */
+.services {
+  background: linear-gradient(to bottom, var(--color-linen), var(--color-linen-deep));
+}
+
+/* Brilhos radiais (elipses do tamanho da caixa) */
+.glow-white {
+  background: radial-gradient(closest-side, rgb(255 255 250 / 0.75), rgb(255 255 250 / 0));
+}
+
+.glow-sand-1 {
+  background: radial-gradient(closest-side, rgb(219 178 125 / 0.32), rgb(219 178 125 / 0));
+}
+
+.glow-sand-2 {
+  background: radial-gradient(closest-side, rgb(219 178 125 / 0.26), rgb(219 178 125 / 0));
+}
+
+/* Entradas de Serviços: estado de espera (ver "Entrada da Hero e da navbar") */
+html.js-ready .services [data-reveal],
+html.js-ready .services [data-word],
+html.js-ready .services [data-number],
+html.js-ready .services [data-number-line],
+html.js-ready .services [data-faq-line],
+html.js-ready .services [data-faq-item] {
+  opacity: 0;
+}
+
+html.js-ready .services [data-service-el="photo"] {
+  clip-path: inset(100% 0 0 0);
+}
+
+/* "Como trabalhamos": preenchimento bronze sobre o trilho. Vazio por padrão (como no Figma);
+   o GSAP o leva a 1 com o scroll. Com reduced-motion já aparece preenchido. */
+.process__fill {
+  transform: scaleX(0);
+  transform-origin: 0% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .process__fill {
+    transform: none;
+  }
+}
+
+/* Entradas de Sobre: estado de espera */
+html.js-ready .about [data-reveal],
+html.js-ready .about [data-word] {
+  opacity: 0;
+}
+
+/* FAQ: a resposta abre na altura natural (0fr → 1fr). Sem JS todas ficam abertas. */
+.faq__panel {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.33, 1, 0.68, 1); /* power2.out */
+}
+
+.faq__panel > div {
+  min-height: 0;
+}
+
+html.js .faq__panel[data-open="false"] {
+  grid-template-rows: 0fr;
+}
+
+/* Sinal: "–" aberta, "+" fechada; o que aparece entra com fade curto */
+.faq__icon > span {
+  animation: faq-icon-in 0.25s ease;
+}
+
+.faq__icon-closed,
+html.js [aria-expanded="false"] .faq__icon-open {
+  display: none;
+}
+
+html.js [aria-expanded="false"] .faq__icon-closed {
+  display: inline;
+}
+
+@keyframes faq-icon-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq__panel {
+    transition: none;
+  }
+
+  .faq__icon > span {
+    animation: none;
+  }
+}
+
+/* Efeito "Noise" do Figma (ruído escuro 6%) */
+.paper-grain {
+  background-image: url("/images/textures/grao-de-papel.svg");
+  background-size: 1440px 2831px;
+  background-repeat: repeat;
+}
+
+/* ------------------------------------------------------------------
+ * Sobre — Figma "4 · Sobre" (101:455 / 101:1069)
+ * ------------------------------------------------------------------ */
+.about {
+  background: linear-gradient(to bottom, var(--color-linen), var(--color-linen-deep));
+  /* Mobile/tablet: pode crescer além da tela (conteúdo empilhado) */
+  min-height: 100vh;
+}
+
+@supports (height: 100svh) {
+  .about {
+    min-height: 100svh;
+  }
+}
+
+/* Desktop: exatamente uma tela (Figma 1440×900); máximos = valores do Figma */
+@media (min-width: 64rem) {
+  .about {
+    /* Uma tela; se o conteúdo não couber (inclusive abaixo de 560px de altura), cresce em vez de cortar */
+    min-height: max(560px, 100vh);
+    --about-pt: max(clamp(96px, 14.5vh, 132px), calc(var(--nav-offset) + 24px)); /* abaixo da navbar fixa */
+    --about-pb: clamp(36px, 6vh, 56px); /* folga dos pilares até a borda inferior */
+    --about-gap: clamp(24px, 4.9vh, 44px); /* entre os blocos */
+    --about-num-gap: 0.306em; /* "+15" → rótulo: 52px em 170px (cauda do "5" = 0.158em) */
+    --about-text-gap: clamp(16px, 3.1vh, 28px); /* parágrafo → link */
+    /* Pilares ancorados embaixo (margin-top: auto); distância mínima até o bloco "+15 / texto" */
+    --about-min-split: clamp(32px, 6vh, 64px);
+    --about-pillars-pt: max(0px, calc(var(--about-min-split) - var(--about-gap)));
+    --about-pillar-line: clamp(20px, 4.9vh, 44px); /* linha fina → título do pilar */
+    --about-pillar-desc: clamp(8px, 1.8vh, 16px); /* título → descrição */
+  }
+
+  @supports (height: 100svh) {
+    .about {
+      min-height: max(560px, 100svh);
+    }
+  }
+}
+
+/* Janelas baixas: reduz os espaços antes de mexer no título */
+@media (min-width: 64rem) and (max-height: 700px) {
+  .about {
+    --about-gap: clamp(16px, 3vh, 44px);
+    --about-num-gap: 0.22em;
+    --about-text-gap: 16px;
+    --about-pillar-line: clamp(16px, 3vh, 44px);
+  }
+}
+
+/* ------------------------------------------------------------------
+ * Contato — Figma "5 · Contato + rodapé" (101:541 / 101:1147)
+ * ------------------------------------------------------------------ */
+.contact {
+  background: linear-gradient(to bottom, var(--color-linen), var(--color-linen-deep));
+}
+
+/* Faixa "Contatos + mapa": no desktop, exatamente uma tela */
+@media (min-width: 64rem) {
+  .contact__band {
+    min-height: max(560px, 100vh);
+  }
+
+  @supports (height: 100svh) {
+    .contact__band {
+      min-height: max(560px, 100svh);
+    }
+  }
+}
+
+/* Entradas de Contato e do rodapé: estado de espera */
+html.js-ready .contact [data-reveal],
+html.js-ready .contact [data-word],
+html.js-ready [data-footer] [data-reveal] {
+  opacity: 0;
+}
+
+html.js-ready .contact [data-contact-el="map"] {
+  clip-path: inset(100% 0 0 0);
+}
+
+/* "Enviar e-mail" / "Como chegar": o sublinhado fino do Figma fica; no hover uma linha bronze
+   cresce por cima dele (mesma posição: logo abaixo da caixa de 17px) e a seta sobe */
+.contact__link {
+  position: relative;
+}
+
+.contact__link::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  height: 1px;
+  background: var(--color-bronze);
+  transform: scaleX(0);
+  transform-origin: 100% 50%;
+  transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@media (hover: hover) {
+  .contact__link:hover::after {
+    transform: scaleX(1);
+    transform-origin: 0% 50%;
+  }
+
+  .contact__link:hover .link-line__arrow {
+    transform: translate(4px, -4px);
+  }
+}
+
+/* Rodapé: seta do "Voltar ao topo" sobe no hover */
+.footer__arrow {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@media (hover: hover) {
+  .footer__top:hover .footer__arrow {
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact__link::after,
+  .footer__arrow {
+    transition: none;
+  }
+}
+
+/* Mapa levemente dessaturado para combinar com a paleta */
+.contact__map iframe {
+  filter: grayscale(0.35) sepia(0.1);
+}
+
+/* Rolagem suave nativa só sem JS (com JS, o Lenis suaviza). Precisa valer desde antes do
+   primeiro ScrollTrigger: ele lê o scroll-behavior do <html> ao registrar a rolagem e, se for
+   "smooth", o regrava inline após cada refresh — e a rolagem nativa suave briga com o Lenis.
+   `html.js` vem do script do <head> (layout.tsx). O Next desliga nas trocas de rota via
+   data-scroll-behavior="smooth" no <html>. */
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.js) {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Seção focada após uma âncora (SmoothScroll): foco só para leitores de tela/teclado */
+section[tabindex="-1"]:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar__link::after,
+  .navbar__quote::before,
+  .navbar__quote-arrow,
+  .hero__cta-circle,
+  .hero__cta-arrow,
+  .link-line::after,
+  .link-line__arrow {
+    transition: none;
+  }
 }

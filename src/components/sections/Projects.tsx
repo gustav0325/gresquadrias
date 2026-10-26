@@ -1,17 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
 import { MaskedWords } from "@/components/ui/MaskedWords";
 import { ProjectCard } from "@/components/ui/ProjectCard";
 import { QUOTE_LINK } from "@/config/navigation";
-import { CATEGORIAS, type Categoria, PROJETOS } from "@/data/projetos";
-import { entrancesEnabled, gsap, MOTION_QUERIES, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { PROJETOS } from "@/data/projetos";
+import { entrancesEnabled, gsap, MOTION_QUERIES, useGSAP } from "@/lib/gsap";
 import { REVEALED } from "@/lib/reveal";
-
-const FILTROS = ["Todos", ...CATEGORIAS] as const;
-type Filtro = "Todos" | Categoria;
 
 /** Palavras abaixo da máscara: 100% da linha + o respiro de 0,12em da .word-mask. */
 const WORD_HIDDEN_Y = 115;
@@ -37,7 +34,7 @@ function revealLines(
 /**
  * Seção Projetos da Home — Figma "2 · Projetos":
  * desktop 101:91 e mobile 101:730.
- * Os filtros por categoria só existem no layout mobile do Figma.
+ * No mobile, todas as obras em lista única (sem os filtros por categoria do Figma).
  *
  * Fica uma camada acima da Hero: no desktop passa por cima dela como uma cortina.
  *
@@ -45,24 +42,7 @@ function revealLines(
  * legenda, e o CTA. Parallax das fotos só no desktop. Estados iniciais só sob `html.js-ready`.
  */
 export function Projects() {
-  const [filtro, setFiltro] = useState<Filtro>("Todos");
   const sectionRef = useRef<HTMLElement>(null);
-  const refreshTimer = useRef(0);
-  const filtroMudou = useRef(false);
-
-  // Recalcula os gatilhos quando o filtro (mobile) muda a altura da grade.
-  // Fotos não: as molduras têm proporção fixa, carregar não muda o layout.
-  const refreshSoon = useCallback(() => {
-    window.clearTimeout(refreshTimer.current);
-    refreshTimer.current = window.setTimeout(() => ScrollTrigger.refresh(), 200);
-  }, []);
-
-  useEffect(() => {
-    if (filtroMudou.current) refreshSoon();
-    filtroMudou.current = true;
-  }, [filtro, refreshSoon]);
-
-  useEffect(() => () => window.clearTimeout(refreshTimer.current), []);
 
   useGSAP(
     () => {
@@ -175,9 +155,6 @@ export function Projects() {
     { scope: sectionRef },
   );
 
-  const visivel = (categoria: Categoria) => filtro === "Todos" || filtro === categoria;
-  const total = PROJETOS.filter((p) => visivel(p.categoria)).length;
-
   return (
     <section
       ref={sectionRef}
@@ -191,7 +168,7 @@ export function Projects() {
       />
 
       <header
-        className="px-(--gutter) pt-[116px] pb-9 md:pt-[max(clamp(88px,13vh,132px),calc(var(--nav-offset)+24px))] md:pb-16"
+        className="px-(--gutter) pt-[116px] pb-8 md:pt-[max(clamp(88px,13vh,132px),calc(var(--nav-offset)+24px))] md:pb-16"
         data-projects-el="header"
       >
         <p
@@ -226,29 +203,6 @@ export function Projects() {
         </div>
       </header>
 
-      {/* Filtros (somente mobile, rolagem lateral) */}
-      <div
-        role="group"
-        aria-label="Filtrar obras por categoria"
-        className="projects__filters flex gap-7 overflow-x-auto px-(--gutter) md:hidden"
-      >
-        {FILTROS.map((item) => {
-          const ativo = item === filtro;
-          return (
-            <button
-              key={item}
-              type="button"
-              aria-pressed={ativo}
-              onClick={() => setFiltro(item)}
-              className={`focus-ring flex shrink-0 flex-col gap-2 text-sm leading-[normal] font-medium ${ativo ? "text-espresso" : "text-taupe"}`}
-            >
-              {item}
-              <span className={`h-px w-full bg-line ${ativo ? "" : "opacity-0"}`} />
-            </button>
-          );
-        })}
-      </div>
-
       <div className="px-(--gutter)">
         <div className="h-px bg-line" data-projects-el="divider" />
       </div>
@@ -260,7 +214,7 @@ export function Projects() {
             return (
               <li
                 key={projeto.id}
-                className={`${offset ? "md:relative md:top-[min(120px,8.33vw)]" : ""} ${visivel(projeto.categoria) ? "" : "max-md:hidden"}`}
+                className={offset ? "md:relative md:top-[min(120px,8.33vw)]" : undefined}
               >
                 <ProjectCard projeto={projeto} offset={offset} />
               </li>
@@ -268,13 +222,6 @@ export function Projects() {
           })}
         </ul>
       </div>
-
-      <p
-        className="pb-20 text-center text-[13px] leading-[normal] text-taupe md:hidden"
-        aria-live="polite"
-      >
-        Mostrando {total} {total === 1 ? "obra" : "obras"}
-      </p>
 
       {/* CTA */}
       <div

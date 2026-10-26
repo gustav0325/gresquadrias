@@ -362,7 +362,7 @@ export function Hero() {
 
         <ScrollIndicator
           href={SECTION_LINKS.projetos}
-          className="absolute right-[39.375px] bottom-[32.375px] z-20 md:right-(--gutter) md:left-auto md:bottom-[calc(var(--hero-pb)+24px)]"
+          className="absolute right-[39.375px] bottom-[32.375px] z-20 max-md:hidden md:right-(--gutter) md:left-auto md:bottom-[calc(var(--hero-pb)+24px)]"
         />
       </section>
 

@@ -382,14 +382,6 @@ html.js-ready .scroll-seal__arrow {
   background-repeat: repeat;
 }
 
-.projects__filters {
-  scrollbar-width: none;
-}
-
-.projects__filters::-webkit-scrollbar {
-  display: none;
-}
-
 /* Entradas de Projetos: estado de espera (ver "Entrada da Hero e da navbar") */
 html.js-ready .projects [data-projects-el="eyebrow"],
 html.js-ready .projects [data-projects-el="intro"],

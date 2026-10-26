@@ -73,6 +73,8 @@
   --nav-blur: 12px;
   --nav-line: var(--color-bronze); /* linha do hover / link ativo */
   --nav-active: var(--color-bronze);
+  /* Painel do menu mobile: o vidro da cápsula, mais denso para os links ficarem legíveis */
+  --nav-menu-bg: rgb(13 10 9 / 0.78);
 }
 
 @media (min-width: 64rem) {
@@ -83,6 +85,7 @@
 
 .navbar[data-tone="light"] {
   --nav-bg: rgb(255 251 245 / 0.7);
+  --nav-menu-bg: rgb(255 251 245 / 0.94);
   --nav-border: rgb(26 18 10 / 0.16);
   --nav-fg: var(--color-espresso);
   --nav-btn-fg: var(--color-espresso);
@@ -104,6 +107,18 @@
   .navbar[data-scrolled]:not([data-tone="light"]) {
     --nav-bg: rgb(255 255 255 / 0.1);
   }
+}
+
+/* Fundo atrás do menu mobile aberto */
+.navbar__scrim {
+  background: rgb(13 10 9 / 0.4);
+}
+
+/* Menu mobile aberto (lib/page-lock.ts): sem rolagem atrás dele */
+html.page-locked,
+html.page-locked body {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .navbar[data-tone="light"] .navbar__logo--dark,

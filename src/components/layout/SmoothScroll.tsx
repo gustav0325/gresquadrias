@@ -5,6 +5,7 @@ import "lenis/dist/lenis.css";
 import { useEffect } from "react";
 
 import { gsap, prefersReducedMotion, ScrollTrigger } from "@/lib/gsap";
+import { lockPage, PAGE_LOCK_EVENT } from "@/lib/page-lock";
 
 /** Leva o foco para a seção de destino sem rolar de novo (leitores de tela e teclado). */
 function focusSection(section: HTMLElement | null) {
@@ -37,10 +38,14 @@ export function SmoothScroll() {
     const touch = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
     const lenis = touch ? null : new Lenis({ autoRaf: false, duration: 1.1 });
     const raf = (time: number) => lenis?.raf(time * 1000);
+    // Página travada (menu mobile aberto): o Lenis para junto com a rolagem nativa
+    const onPageLock = (event: Event) =>
+      (event as CustomEvent<boolean>).detail ? lenis?.stop() : lenis?.start();
     if (lenis) {
       lenis.on("scroll", ScrollTrigger.update);
       gsap.ticker.add(raf);
       gsap.ticker.lagSmoothing(0);
+      window.addEventListener(PAGE_LOCK_EVENT, onPageLock);
     }
 
     // Captura: roda antes do <Link> do Next, que respeita o preventDefault
@@ -59,6 +64,9 @@ export function SmoothScroll() {
       if (id !== "top" && !section) return;
 
       event.preventDefault();
+      // Link do menu mobile: este handler roda antes do onClick do menu, então a página
+      // (rolagem, Lenis e `inert`) é liberada aqui, antes de rolar e de focar a seção
+      lockPage(false);
       // Offset 0: as seções já reservam no padding-top o espaço da navbar fixa
       if (lenis) {
         lenis.scrollTo(section ?? 0, { onComplete: () => focusSection(section) });
@@ -73,6 +81,7 @@ export function SmoothScroll() {
     return () => {
       document.removeEventListener("click", onClick, true);
       if (lenis) {
+        window.removeEventListener(PAGE_LOCK_EVENT, onPageLock);
         gsap.ticker.remove(raf);
         gsap.ticker.lagSmoothing(500, 33);
         lenis.destroy();

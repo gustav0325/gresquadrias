@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { NAV_LINKS, QUOTE_LINK } from "@/config/navigation";
 import {
@@ -10,9 +10,11 @@ import {
   gsap,
   HERO_INTRO_EVENT,
   type HeroIntroDetail,
+  prefersReducedMotion,
   ScrollTrigger,
   useGSAP,
 } from "@/lib/gsap";
+import { lockPage } from "@/lib/page-lock";
 
 /** Seções na ordem da página; a Hero ("inicio") não tem link. */
 const SECTION_IDS = ["inicio", ...NAV_LINKS.map((link) => link.href.split("#")[1])];
@@ -20,6 +22,8 @@ const SECTION_IDS = ["inicio", ...NAV_LINKS.map((link) => link.href.split("#")[1
 const INTRO_FALLBACK_MS = 4500;
 /** A entrada da navbar acontece uma única vez por carregamento da página. */
 let introPlayed = false;
+/** Mesmo breakpoint do `lg:` (64rem): a partir dele o menu mobile não existe. */
+const DESKTOP_QUERY = "(min-width: 64rem)";
 
 /**
  * Navbar fixa em cápsula de vidro.
@@ -27,13 +31,115 @@ let introPlayed = false;
  * Mobile: logo + "Menu" — Figma 96:144 (sobre a Hero) e 74:154 (fundo claro).
  * Tom "dark" sobre a Hero e blocos `[data-nav-tone="dark"]`; "light" no resto da página.
  * Um ScrollTrigger por seção marca o link ativo (bronze #996e40 + linha).
+ *
+ * Menu mobile (o Figma não tem o estado aberto): painel logo abaixo da cápsula, com o mesmo
+ * vidro, os links e o botão Orçamento. É modal: trava a página, prende o foco na navbar e fecha
+ * com Esc, toque fora, o próprio botão ou ao seguir um link.
  */
 export function Navbar() {
   const headerRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const scrimRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [activeId, setActiveId] = useState("inicio");
   const [overDarkBlock, setOverDarkBlock] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  /** Ao fechar, devolve o foco ao botão (Esc, toque fora, botão); não ao seguir um link. */
+  const restoreFocus = useRef(false);
+  const menuWasOpened = useRef(false);
+
+  const closeMenu = useCallback((returnFocus: boolean) => {
+    restoreFocus.current = returnFocus;
+    setMenuOpen(false);
+  }, []);
+
+  // O SmoothScroll já libera a página antes de rolar; aqui cobre a navegação nativa (reduced-motion)
+  const onMenuLink = () => {
+    lockPage(false);
+    closeMenu(false);
+  };
+
+  // Menu aberto: página travada, Esc fecha, Tab circula pela navbar, desktop fecha
+  useEffect(() => {
+    if (!menuOpen) return;
+    const header = headerRef.current!;
+    const menuButton = menuButtonRef.current;
+    lockPage(true);
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeMenu(true);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = Array.from(header.querySelectorAll<HTMLElement>("a[href], button")).filter(
+        (el) => el.getClientRects().length > 0,
+      );
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    const desktop = window.matchMedia(DESKTOP_QUERY);
+    const onBreakpoint = () => {
+      if (desktop.matches) closeMenu(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    desktop.addEventListener("change", onBreakpoint);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      desktop.removeEventListener("change", onBreakpoint);
+      lockPage(false);
+      if (restoreFocus.current) menuButton?.focus();
+      restoreFocus.current = false;
+    };
+  }, [menuOpen, closeMenu]);
+
+  // Abertura: painel desce 8px e aparece (0,45 s, power3.out), itens em sequência (0,07 s)
+  useGSAP(
+    () => {
+      const panel = menuRef.current!;
+      const layers = [panel, scrimRef.current!];
+      const items = panel.querySelectorAll("[data-menu-item]");
+      const reduced = prefersReducedMotion();
+      gsap.killTweensOf([...layers, ...items]);
+
+      if (menuOpen) {
+        menuWasOpened.current = true;
+        // Já visível (visibility) no início: o foco no primeiro link precisa disso
+        if (reduced) {
+          gsap.set(layers, { autoAlpha: 1, y: 0 });
+          gsap.set(items, { opacity: 1, y: 0 });
+        } else {
+          gsap.fromTo(
+            layers,
+            { opacity: 0, visibility: "visible" },
+            { opacity: 1, duration: 0.45, ease: "power3.out" },
+          );
+          gsap.fromTo(panel, { y: -8 }, { y: 0, duration: 0.45, ease: "power3.out" });
+          gsap.fromTo(
+            items,
+            { opacity: 0, y: 12 },
+            { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.07, delay: 0.05 },
+          );
+        }
+        panel.querySelector<HTMLElement>("a[href]")?.focus({ preventScroll: true });
+      } else if (menuWasOpened.current) {
+        if (reduced) gsap.set(layers, { autoAlpha: 0 });
+        else gsap.to(layers, { autoAlpha: 0, duration: 0.25, ease: "power2.out" });
+      }
+    },
+    { dependencies: [menuOpen] },
+  );
 
   useGSAP(
     (context) => {
@@ -182,13 +288,64 @@ export function Navbar() {
           </li>
         </ul>
 
+        {/* -m-3 p-3: área de toque de ~37px sem mudar a posição do texto */}
         <button
+          ref={menuButtonRef}
           type="button"
-          className="focus-ring rounded-sm text-[11px] font-medium tracking-[0.14em] uppercase lg:hidden"
+          aria-expanded={menuOpen}
+          aria-controls="menu-mobile"
+          onClick={() => (menuOpen ? closeMenu(true) : setMenuOpen(true))}
+          className="focus-ring -m-3 touch-manipulation rounded-sm p-3 text-[11px] font-medium tracking-[0.14em] uppercase lg:hidden"
         >
-          Menu
+          {menuOpen ? "Fechar" : "Menu"}
         </button>
       </nav>
+
+      {/* Fundo do menu: escurece a página e fecha ao toque (fixed: a header não tem transform) */}
+      <div
+        ref={scrimRef}
+        className="navbar__scrim invisible fixed inset-0 -z-10 touch-none opacity-0 lg:hidden"
+        aria-hidden="true"
+        onClick={() => closeMenu(true)}
+      />
+
+      <div
+        ref={menuRef}
+        id="menu-mobile"
+        inert={!menuOpen}
+        className="invisible absolute inset-x-0 top-full mt-2 touch-none rounded-[26px] border border-(--nav-border) bg-(--nav-menu-bg) px-(--nav-pad-l) pt-2 pb-(--nav-pad-l) text-(--nav-fg) opacity-0 backdrop-blur-(--nav-blur) lg:hidden"
+      >
+        <ul className="text-base leading-[1.55]">
+          {NAV_LINKS.map((link, i) => (
+            <li
+              key={link.href}
+              className={i > 0 ? "border-t border-(--nav-border)" : undefined}
+              data-menu-item
+            >
+              <Link
+                href={link.href}
+                onClick={onMenuLink}
+                aria-current={activeId === link.href.split("#")[1] ? "location" : undefined}
+                className="focus-ring block rounded-sm py-3 aria-[current]:text-(--nav-active)"
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-2" data-menu-item>
+          <Link
+            href={QUOTE_LINK.href}
+            onClick={onMenuLink}
+            className="navbar__quote btn-bronze focus-ring flex items-center justify-center gap-2.5 rounded-full py-[13px] text-(--nav-btn-fg)"
+          >
+            {QUOTE_LINK.label}
+            <span aria-hidden="true" className="navbar__quote-arrow inline-block w-4 text-center">
+              ↗
+            </span>
+          </Link>
+        </div>
+      </div>
     </header>
   );
 }

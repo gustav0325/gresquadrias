@@ -6,11 +6,11 @@ import { FaqList } from "@/components/ui/FaqList";
 import { MaskedWords } from "@/components/ui/MaskedWords";
 import { NumberLabel } from "@/components/ui/NumberLabel";
 import { ServiceRow } from "@/components/ui/ServiceRow";
-import { WHATSAPP_URL } from "@/config/contato";
 import { FAQ } from "@/data/faq";
 import { ETAPAS, SERVICOS } from "@/data/servicos";
 import { entrancesEnabled, gsap, MOTION_QUERIES, useGSAP } from "@/lib/gsap";
 import { clearReveal, WORD_HIDDEN_Y, wordLines } from "@/lib/reveal";
+import { WHATSAPP_URL } from "@/lib/whatsapp";
 
 /** Sobra da camada do parallax (cada lado, % da moldura) — só enquanto o parallax está ativo. */
 const PARALLAX_BLEED = "-5%";

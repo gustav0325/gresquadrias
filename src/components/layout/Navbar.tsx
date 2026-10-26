@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { NAV_LINKS, QUOTE_LINK } from "@/config/navigation";
+import { NAV_LINKS, NEW_TAB, QUOTE_LINK } from "@/config/navigation";
 import {
   entrancesEnabled,
   gsap,
@@ -275,8 +275,9 @@ export function Navbar() {
             </li>
           ))}
           <li>
-            <Link
+            <a
               href={QUOTE_LINK.href}
+              {...NEW_TAB}
               className="navbar__quote btn-bronze focus-ring flex items-center gap-2.5 rounded-full py-[13px] pr-[30px] pl-[34px] text-(--nav-btn-fg)"
             >
               {QUOTE_LINK.label}
@@ -284,7 +285,7 @@ export function Navbar() {
               <span aria-hidden="true" className="navbar__quote-arrow inline-block w-4 text-center">
                 ↗
               </span>
-            </Link>
+            </a>
           </li>
         </ul>
 
@@ -334,8 +335,9 @@ export function Navbar() {
           ))}
         </ul>
         <div className="mt-2" data-menu-item>
-          <Link
+          <a
             href={QUOTE_LINK.href}
+            {...NEW_TAB}
             onClick={onMenuLink}
             className="navbar__quote btn-bronze focus-ring flex items-center justify-center gap-2.5 rounded-full py-[13px] text-(--nav-btn-fg)"
           >
@@ -343,7 +345,7 @@ export function Navbar() {
             <span aria-hidden="true" className="navbar__quote-arrow inline-block w-4 text-center">
               ↗
             </span>
-          </Link>
+          </a>
         </div>
       </div>
     </header>

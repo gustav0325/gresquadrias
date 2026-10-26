@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRef } from "react";
 
 import { MaskedWords } from "@/components/ui/MaskedWords";
+import { NEW_TAB } from "@/config/navigation";
 import { SOBRE } from "@/data/sobre";
 import { entrancesEnabled, gsap, MOTION_QUERIES, prefersReducedMotion, useGSAP } from "@/lib/gsap";
 import { clearReveal, WORD_HIDDEN_Y, wordLines } from "@/lib/reveal";
@@ -261,14 +261,15 @@ export function About() {
               {apoio.texto}
             </p>
           </div>
-          <Link
+          <a
             href={SOBRE.link.href}
+            {...NEW_TAB}
             className="link-line focus-ring rounded-sm text-[14px] leading-[1.21] font-medium text-bronze-text"
             data-reveal
             data-about-el="link"
           >
             {SOBRE.link.label} <span className="link-line__arrow">↗</span>
-          </Link>
+          </a>
         </div>
       </div>
 

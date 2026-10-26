@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRef } from "react";
 
 import { MaskedWords } from "@/components/ui/MaskedWords";
 import { ProjectCard } from "@/components/ui/ProjectCard";
-import { QUOTE_LINK } from "@/config/navigation";
+import { NEW_TAB, QUOTE_LINK } from "@/config/navigation";
 import { PROJETOS } from "@/data/projetos";
 import { entrancesEnabled, gsap, MOTION_QUERIES, useGSAP } from "@/lib/gsap";
 import { REVEALED } from "@/lib/reveal";
@@ -248,8 +247,9 @@ export function Projects() {
             </h3>
           </div>
 
-          <Link
+          <a
             href={QUOTE_LINK.href}
+            {...NEW_TAB}
             className="group focus-ring self-start rounded-full bg-bronze transition-colors duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-[#b88b5c] motion-reduce:transition-none px-8 py-[18px] text-[12px] leading-[1.21] font-medium tracking-[0.14em] text-ink md:col-start-2 md:row-start-2 md:flex md:h-[clamp(48px,7.5vh,60px)] md:items-center md:self-center md:px-[clamp(28px,3vw,44px)] md:py-0 md:text-[13px] md:tracking-[0.12em]"
             data-projects-el="cta-button"
           >
@@ -260,7 +260,7 @@ export function Projects() {
                 ↗
               </span>
             </span>
-          </Link>
+          </a>
         </div>
       </div>
 

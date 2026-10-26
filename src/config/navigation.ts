@@ -1,3 +1,5 @@
+import { WHATSAPP_URL } from "@/lib/whatsapp";
+
 /**
  * Destinos de navegação do site.
  * A Home do Figma ("Home - Desktop") reúne Projetos, Serviços, Sobre e Contato
@@ -17,4 +19,7 @@ export const NAV_LINKS = [
   { label: "Contato", href: SECTION_LINKS.contato },
 ] as const;
 
-export const QUOTE_LINK = { label: "Orçamento", href: SECTION_LINKS.contato } as const;
+/** CTAs comerciais (orçamento) abrem o WhatsApp oficial em nova aba. */
+export const QUOTE_LINK = { label: "Orçamento", href: WHATSAPP_URL } as const;
+
+export const NEW_TAB = { target: "_blank", rel: "noopener noreferrer" } as const;

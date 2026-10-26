@@ -1,8 +1,8 @@
 import Image from "next/image";
-import Link from "next/link";
 
 import { MaskedWords } from "@/components/ui/MaskedWords";
 import { NumberLabel } from "@/components/ui/NumberLabel";
+import { NEW_TAB } from "@/config/navigation";
 import type { Servico } from "@/data/servicos";
 
 type ServiceRowProps = {
@@ -87,14 +87,15 @@ export function ServiceRow({ servico, index }: ServiceRowProps) {
           ))}
         </ul>
 
-        <Link
+        <a
           href={servico.orcamento.href}
+          {...NEW_TAB}
           className="link-line focus-ring rounded-sm text-[14px] leading-[1.21] font-medium text-espresso [--link-line:var(--color-bronze-deep)]"
           data-reveal
           data-service-el="link"
         >
           {servico.orcamento.label} <span className="link-line__arrow">↗</span>
-        </Link>
+        </a>
       </div>
     </article>
   );

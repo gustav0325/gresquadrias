@@ -1,8 +1,8 @@
-/** Dados de contato — usados na seção Contato e nos links de WhatsApp do site. */
+/** Dados de contato — usados na seção Contato. O link do WhatsApp vem de @/lib/whatsapp. */
+
+import { WHATSAPP_URL } from "@/lib/whatsapp";
 
 const ENDERECO_COMPLETO = "Rua Augusta Magalhães, 87, Vila Água Funda, São Paulo - SP";
-
-export const WHATSAPP_URL = "https://wa.me/5511943977964";
 
 export const CONTATO = {
   telefone: { exibicao: "+55 (11) 94397-7964", href: "tel:+5511943977964" },

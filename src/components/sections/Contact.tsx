@@ -237,7 +237,9 @@ export function Contact() {
                     <dt className="text-[11px] font-medium tracking-[0.14em] text-bronze-text-greige">
                       {linha.rotulo}
                     </dt>
-                    <dd className="contact__value text-[20px] text-espresso [overflow-wrap:anywhere] md:text-[26px] lg:text-[length:clamp(1rem,1.53vw,1.375rem)]">
+                    {/* lg+: o tamanho acompanha a largura da célula da grade 2×2 (19px em 1440),
+                        para o e-mail caber em uma linha de 1024 em diante */}
+                    <dd className="contact__value text-[20px] text-espresso [overflow-wrap:anywhere] md:text-[26px] lg:text-[length:clamp(0.8125rem,calc(1.394vw-1.08px),1.1875rem)]">
                       {linha.valor}
                     </dd>
                     {linha.complemento && (

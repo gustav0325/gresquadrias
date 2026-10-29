@@ -16,6 +16,7 @@
   --color-greige: #e7e1d7; /* fundo da grade de projetos */
   --color-night: #13100e; /* bloco do CTA */
   --color-paper-muted: #ccc4b8; /* texto de apoio sobre fundo escuro (CTA Últimas obras) */
+  --color-paper-dim: #bdb5a9; /* textos secundários do rodapé escuro */
   --color-bronze-deep: #996e40; /* textos pequenos em bronze */
   --color-espresso: #15110e; /* texto escuro */
   --color-taupe: #6b655c; /* texto secundário */
@@ -28,6 +29,7 @@
 
   --font-sans: var(--font-inter), var(--font-inter-arrows);
   --font-display: var(--font-cormorant);
+  --font-display-italic: var(--font-cormorant-italic);
 }
 
 /* Margem lateral única: navbar, Hero e selo */
@@ -709,22 +711,170 @@ html.js-ready .contact [data-contact-el="map"] {
   }
 }
 
-/* Rodapé: seta do "Voltar ao topo" sobe no hover */
-.footer__arrow {
-  display: inline-block;
-  transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
-}
-
-@media (hover: hover) {
-  .footer__top:hover .footer__arrow {
-    transform: translateY(-4px);
+@media (prefers-reduced-motion: reduce) {
+  .contact__link::after {
+    transition: none;
   }
 }
 
+/* ------------------------------------------------------------------
+ * Rodapé escuro — Figma 145:2 / 145:63
+ * ------------------------------------------------------------------ */
+/* Ícones (WhatsApp, Instagram): o bronze preenche o círculo a partir do centro, o ícone escurece
+   e o botão sobe 3px. Só transform, opacity e cor (a sombra acompanha a elevação): o tamanho do
+   botão e o layout não mudam. A inclinação do ícone é do GSAP (Footer.tsx). */
+.footer-social {
+  position: relative;
+  overflow: hidden;
+  border-radius: 50%;
+  color: var(--color-bronze);
+  transition:
+    transform 0.35s cubic-bezier(0.33, 1, 0.68, 1),
+    box-shadow 0.35s cubic-bezier(0.33, 1, 0.68, 1),
+    background-color 0.2s ease-out;
+}
+
+.footer-social__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-bronze);
+  transform: scale(0);
+  transform-origin: center;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.footer-social__icon {
+  position: relative;
+  z-index: 1;
+  transition: color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .footer-social:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgb(198 154 107 / 0.25);
+  }
+
+  .footer-social:hover .footer-social__fill {
+    transform: scale(1);
+  }
+
+  .footer-social:hover .footer-social__icon {
+    color: var(--color-ink-warm);
+  }
+}
+
+/* Teclado: o mesmo estado do hover + contorno bronze */
+.footer-social:focus-visible {
+  outline: 2px solid var(--color-bronze);
+  outline-offset: 3px;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgb(198 154 107 / 0.25);
+}
+
+.footer-social:focus-visible .footer-social__fill {
+  transform: scale(1);
+}
+
+.footer-social:focus-visible .footer-social__icon {
+  color: var(--color-ink-warm);
+}
+
+/* Toque: sem hover; ao pressionar, só um fundo bronze leve */
+@media (hover: none) {
+  .footer-social:active {
+    background-color: rgb(198 154 107 / 0.12);
+  }
+}
+
+/* "Voltar ao topo ↑": sublinhado bronze cresce da esquerda e a seta sobe 3px */
+.footer__top-label {
+  position: relative;
+  display: inline-block;
+}
+
+.footer__top-label::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  height: 1px;
+  background: var(--color-bronze);
+  transform: scaleX(0);
+  transform-origin: 0% 50%;
+  transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.footer__arrow {
+  display: inline-block;
+  transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@media (hover: hover) {
+  .footer__top:hover .footer__top-label::after {
+    transform: scaleX(1);
+  }
+
+  .footer__top:hover .footer__arrow {
+    transform: translateY(-3px);
+  }
+}
+
+.footer__top:focus-visible {
+  outline: none;
+}
+
+.footer__top:focus-visible .footer__top-label {
+  outline: 2px solid var(--color-bronze);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.footer__top:focus-visible .footer__top-label::after {
+  transform: scaleX(1);
+}
+
+.footer__top:focus-visible .footer__arrow {
+  transform: translateY(-3px);
+}
+
+/* Movimento reduzido: sem escala, elevação nem deslocamento; só a troca de cor, instantânea */
 @media (prefers-reduced-motion: reduce) {
-  .contact__link::after,
+  .footer-social,
+  .footer-social__fill,
+  .footer-social__icon,
+  .footer__top-label::after,
   .footer__arrow {
     transition: none;
+  }
+
+  .footer-social:hover,
+  .footer-social:focus-visible {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .footer-social__fill {
+    transform: none;
+    opacity: 0;
+  }
+
+  .footer-social:focus-visible .footer-social__fill {
+    transform: none;
+    opacity: 1;
+  }
+
+  .footer__top:hover .footer__arrow,
+  .footer__top:focus-visible .footer__arrow {
+    transform: none;
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  .footer-social:hover .footer-social__fill {
+    transform: none;
+    opacity: 1;
   }
 }
 

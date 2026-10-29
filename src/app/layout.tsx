@@ -12,7 +12,7 @@ const inter = Inter({
   display: "swap",
 });
 
-/* Setas ← → ↓ ↗ do Inter: não fazem parte de nenhum subset do Google Fonts.
+/* Setas ← ↑ → ↓ ↗ do Inter: não fazem parte de nenhum subset do Google Fonts.
    Subset gerado pela API do Google Fonts (`text=`), licença OFL. */
 const interArrows = localFont({
   variable: "--font-inter-arrows",
@@ -20,7 +20,7 @@ const interArrows = localFont({
     { path: "../fonts/inter-arrows-400.woff2", weight: "400" },
     { path: "../fonts/inter-arrows-500.woff2", weight: "500" },
   ],
-  declarations: [{ prop: "unicode-range", value: "U+2190, U+2192-2193, U+2197" }],
+  declarations: [{ prop: "unicode-range", value: "U+2190-2193, U+2197" }],
   display: "swap",
   adjustFontFallback: false,
 });
@@ -30,6 +30,16 @@ const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["500"],
   display: "swap",
+});
+
+/* Itálico só do rodapé ("Acompanhe a GR"): fim da página, então sem preload */
+const cormorantItalic = Cormorant_Garamond({
+  variable: "--font-cormorant-italic",
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["italic"],
+  display: "swap",
+  preload: false,
 });
 
 /** Base das URLs absolutas (Open Graph): domínio de produção na Vercel, localhost fora dela. */
@@ -57,7 +67,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="pt-BR"
       data-scroll-behavior="smooth"
-      className={`${inter.variable} ${interArrows.variable} ${cormorant.variable} antialiased`}
+      className={`${inter.variable} ${interArrows.variable} ${cormorant.variable} ${cormorantItalic.variable} antialiased`}
       suppressHydrationWarning
     >
       <head>

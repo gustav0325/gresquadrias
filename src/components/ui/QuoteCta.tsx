@@ -2,8 +2,9 @@
 
 import { useRef } from "react";
 
+import { BronzeButton } from "@/components/ui/BronzeButton";
 import { MaskedWords } from "@/components/ui/MaskedWords";
-import { NEW_TAB, QUOTE_LINK } from "@/config/navigation";
+import { QUOTE_LINK } from "@/config/navigation";
 import { entrancesEnabled, gsap, MOTION_QUERIES, useGSAP } from "@/lib/gsap";
 import { clearReveal, revealLines, WORD_HIDDEN_Y } from "@/lib/reveal";
 
@@ -76,20 +77,12 @@ export function QuoteCta({ headingLevel: Heading = "h3" }: QuoteCtaProps) {
           </Heading>
         </div>
 
-        <a
+        <BronzeButton
           href={QUOTE_LINK.href}
-          {...NEW_TAB}
-          className="group focus-ring self-start rounded-full bg-bronze transition-colors duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-[#b88b5c] motion-reduce:transition-none px-8 py-[18px] text-[12px] leading-[1.21] font-medium tracking-[0.14em] text-ink md:col-start-2 md:row-start-2 md:flex md:h-[clamp(48px,7.5vh,60px)] md:items-center md:self-center md:px-[clamp(28px,3vw,44px)] md:py-0 md:text-[13px] md:tracking-[0.12em]"
+          label="PEDIR ORÇAMENTO"
+          className="self-start px-8 py-[18px] text-[12px] leading-[1.21] tracking-[0.14em] md:col-start-2 md:row-start-2 md:flex md:h-[clamp(48px,7.5vh,60px)] md:items-center md:self-center md:px-[clamp(28px,3vw,44px)] md:py-0 md:text-[13px] md:tracking-[0.12em]"
           data-cta-el="button"
-        >
-          {/* Um só item flex: o espaço antes da seta não é descartado */}
-          <span>
-            PEDIR ORÇAMENTO{" "}
-            <span className="inline-block transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:translate-x-1 group-hover:-translate-y-1 motion-reduce:transition-none">
-              ↗
-            </span>
-          </span>
-        </a>
+        />
       </div>
     </div>
   );

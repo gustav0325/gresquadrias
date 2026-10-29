@@ -6,6 +6,7 @@ import { FaqList } from "@/components/ui/FaqList";
 import { MaskedWords } from "@/components/ui/MaskedWords";
 import { NumberLabel } from "@/components/ui/NumberLabel";
 import { ServiceRow } from "@/components/ui/ServiceRow";
+import { WorksCta } from "@/components/ui/WorksCta";
 import { FAQ } from "@/data/faq";
 import { ETAPAS, SERVICOS } from "@/data/servicos";
 import { entrancesEnabled, gsap, MOTION_QUERIES, useGSAP } from "@/lib/gsap";
@@ -22,7 +23,8 @@ const STEP_DURATION = 0.12;
 /**
  * Seção Serviços da Home — Figma "3 · Serviços":
  * desktop 101:234 e mobile 101:862.
- * Inclui as linhas de serviço, "Como trabalhamos" e "Perguntas frequentes".
+ * Inclui as linhas de serviço, "Como trabalhamos", o CTA "Últimas obras" (WorksCta, com a
+ * própria entrada) e "Perguntas frequentes".
  *
  * Animações (uma vez, ao entrar na tela): cabeçalho; em cada serviço, o texto em sequência e a
  * foto (máscara + zoom-out); "Como trabalhamos"; FAQ. Parallax das fotos só no desktop.
@@ -417,6 +419,8 @@ export function Services() {
           ))}
         </ol>
       </section>
+
+      <WorksCta />
 
       {/* Perguntas frequentes */}
       <section

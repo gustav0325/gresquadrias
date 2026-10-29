@@ -15,6 +15,7 @@
   --color-linen-deep: #f4f0e9; /* off-white — base do degradê */
   --color-greige: #e7e1d7; /* fundo da grade de projetos */
   --color-night: #13100e; /* bloco do CTA */
+  --color-paper-muted: #ccc4b8; /* texto de apoio sobre fundo escuro (CTA Últimas obras) */
   --color-bronze-deep: #996e40; /* textos pequenos em bronze */
   --color-espresso: #15110e; /* texto escuro */
   --color-taupe: #6b655c; /* texto secundário */
@@ -491,6 +492,15 @@ html.js-ready .services [data-number],
 html.js-ready .services [data-number-line],
 html.js-ready .services [data-faq-line],
 html.js-ready .services [data-faq-item] {
+  opacity: 0;
+}
+
+/* CTA "Veja nossas últimas obras." (dentro de Serviços): estado de espera */
+html.js-ready [data-works-cta] [data-works-cta-el="eyebrow"],
+html.js-ready [data-works-cta] [data-works-cta-el="rule"],
+html.js-ready [data-works-cta] [data-works-cta-el="text"],
+html.js-ready [data-works-cta] [data-works-cta-el="button"],
+html.js-ready [data-works-cta] [data-word] {
   opacity: 0;
 }
 

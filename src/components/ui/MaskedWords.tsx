@@ -3,8 +3,8 @@ import { Fragment } from "react";
 type MaskedWordsProps = {
   /** Uma string por linha, respeitando as quebras do Figma. */
   lines: readonly string[];
-  /** Palavra exibida em bronze (ex.: "sua."). */
-  accent?: string;
+  /** Palavra(s) exibida(s) em bronze (ex.: "sua."; ["últimas", "obras."]). */
+  accent?: string | readonly string[];
   /** Classe de cor da palavra em destaque. */
   accentClassName?: string;
   /**
@@ -37,7 +37,10 @@ export function MaskedWords({
             {line.split(" ").map((word, i, words) => (
               <Fragment key={`${word}-${i}`}>
                 <span className="word-mask">
-                  <span className={`word ${word === accent ? accentClassName : ""}`} data-word>
+                  <span
+                    className={`word ${[accent].flat().includes(word) ? accentClassName : ""}`}
+                    data-word
+                  >
                     {word}
                   </span>
                 </span>

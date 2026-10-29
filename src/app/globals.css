@@ -14,6 +14,9 @@
   --color-linen: #f9f6f0; /* off-white — topo do degradê base */
   --color-linen-deep: #f4f0e9; /* off-white — base do degradê */
   --color-greige: #e7e1d7; /* fundo da grade de projetos */
+  --color-greige-soft: #e9e3d9; /* CTA claro (/obras) */
+  --color-ivory: #f8f6f1; /* texto do botão escuro */
+  --color-umber: #2a231d; /* hover do botão escuro */
   --color-night: #13100e; /* bloco do CTA */
   --color-paper-muted: #ccc4b8; /* texto de apoio sobre fundo escuro (CTA Últimas obras) */
   --color-paper-dim: #bdb5a9; /* textos secundários do rodapé escuro */

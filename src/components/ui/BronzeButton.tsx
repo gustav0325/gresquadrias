@@ -9,17 +9,32 @@ type BronzeButtonProps = Omit<ComponentProps<"a">, "href" | "children"> & {
   label: string;
   /** Página do site (next/link): pré-carregada. */
   prefetch?: boolean;
+  /** "dark": cápsula preta sobre fundo claro (CTA da /obras). */
+  tone?: "bronze" | "dark";
 };
 
 const EASE = "ease-[cubic-bezier(0.33,1,0.68,1)]";
 
+const TONE_CLASS = {
+  bronze: "focus-ring bg-bronze text-ink hover:bg-[#b88b5c]",
+  dark: "bg-ink-warm text-ivory outline-offset-3 outline-bronze-deep hover:bg-umber focus-visible:outline-2",
+} as const;
+
 /**
- * Cápsula bronze com seta ↗ ("Pedir orçamento", "Ver últimas obras").
- * O tamanho vem de `className`. Hover (só com mouse, pelo `hover:` do Tailwind): bronze um tom
- * abaixo e a seta sobe 4px para a direita. Links externos (WhatsApp) abrem em nova aba.
+ * Cápsula bronze (ou preta, `tone="dark"`) com seta ↗ ("Pedir orçamento", "Ver últimas obras").
+ * O tamanho vem de `className`. Hover (só com mouse, pelo `hover:` do Tailwind): fundo um tom
+ * abaixo (bronze) ou acima (preto) e a seta sobe 4px para a direita. Links externos (WhatsApp)
+ * abrem em nova aba.
  */
-export function BronzeButton({ href, label, prefetch, className = "", ...props }: BronzeButtonProps) {
-  const classes = `group focus-ring rounded-full bg-bronze font-medium text-ink transition-colors duration-300 ${EASE} hover:bg-[#b88b5c] motion-reduce:transition-none ${className}`;
+export function BronzeButton({
+  href,
+  label,
+  prefetch,
+  tone = "bronze",
+  className = "",
+  ...props
+}: BronzeButtonProps) {
+  const classes = `group rounded-full font-medium transition-colors duration-300 ${EASE} ${TONE_CLASS[tone]} motion-reduce:transition-none ${className}`;
   const content = (
     // Um só item flex: o espaço antes da seta não é descartado
     <span>

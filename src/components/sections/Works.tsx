@@ -221,7 +221,7 @@ export function Works() {
         </div>
       </div>
 
-      <QuoteCta headingLevel="h2" />
+      <QuoteCta headingLevel="h2" tone="light" />
 
       <div className="paper-grain pointer-events-none absolute inset-0 z-10" aria-hidden="true" />
 

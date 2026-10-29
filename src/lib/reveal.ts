@@ -18,6 +18,22 @@ export function wordLines(title: Element | undefined): HTMLElement[][] {
   return [...lines.entries()].sort(([a], [b]) => a - b).map(([, words]) => words);
 }
 
+/** Anima as palavras (`[data-word]`) de cada linha juntas, uma linha após a outra. */
+export function revealLines(
+  timeline: gsap.core.Timeline,
+  lines: Element[],
+  at: number,
+  vars: { duration: number; stagger: number },
+) {
+  lines.forEach((line, i) => {
+    timeline.to(
+      line.querySelectorAll("[data-word]"),
+      { yPercent: 0, duration: vars.duration, ease: "power3.out" },
+      at + i * vars.stagger,
+    );
+  });
+}
+
 /**
  * Estado final de uma entrada: sem transforms (nenhuma camada extra; rasterização igual à da
  * versão estática) e com o visível explícito inline. O explícito importa: enquanto

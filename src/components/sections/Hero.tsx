@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRef } from "react";
 
 import { ScrollIndicator } from "@/components/ui/ScrollIndicator";
-import { SECTION_LINKS } from "@/config/navigation";
+import { PAGE_LINKS, SECTION_LINKS } from "@/config/navigation";
 import {
   entrancesEnabled,
   gsap,
@@ -320,7 +320,8 @@ export function Hero() {
           />
 
           <Link
-            href={SECTION_LINKS.projetos}
+            href={PAGE_LINKS.obras}
+            prefetch
             className="hero__cta focus-ring mt-[19px] flex w-fit items-center gap-5 rounded-full md:mt-[clamp(20px,3.5vh,40px)]"
             data-hero-el="cta"
           >
@@ -353,7 +354,7 @@ export function Hero() {
               />
             </svg>
             <span className="text-xs leading-none font-medium tracking-[0.22em] text-paper uppercase">
-              Ver projetos
+              Ver obras
             </span>
           </Link>
         </div>

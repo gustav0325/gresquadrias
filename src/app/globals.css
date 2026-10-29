@@ -302,7 +302,7 @@ body {
   display: block;
 }
 
-/* "Ver projetos": seta avança e a borda do círculo ganha bronze */
+/* "Ver obras": seta avança e a borda do círculo ganha bronze */
 .hero__cta-circle {
   transition:
     stroke 0.35s cubic-bezier(0.33, 1, 0.68, 1),
@@ -401,9 +401,14 @@ html.js-ready .scroll-seal__arrow {
 html.js-ready .projects [data-projects-el="eyebrow"],
 html.js-ready .projects [data-projects-el="intro"],
 html.js-ready .projects [data-word],
-html.js-ready .projects [data-card-reveal],
-html.js-ready .projects [data-projects-el="cta-eyebrow"],
-html.js-ready .projects [data-projects-el="cta-button"] {
+html.js-ready .projects [data-card-reveal] {
+  opacity: 0;
+}
+
+/* CTA "A próxima obra pode ser a sua." (Home e /obras): estado de espera */
+html.js-ready [data-quote-cta] [data-cta-el="eyebrow"],
+html.js-ready [data-quote-cta] [data-word],
+html.js-ready [data-quote-cta] [data-cta-el="button"] {
   opacity: 0;
 }
 
@@ -411,15 +416,17 @@ html.js-ready .projects [data-card-el="frame"] {
   clip-path: inset(100% 0 0 0);
 }
 
-/* Hover da foto (Projetos e Serviços): zoom leve dentro da moldura (só com mouse e sem reduced-motion) */
+/* Hover da foto (Projetos, Serviços e Obras): zoom leve dentro da moldura (só com mouse e sem reduced-motion) */
 .project-card__img,
-.service-row__img {
+.service-row__img,
+.work-card__media {
   transition: transform 0.8s cubic-bezier(0.33, 1, 0.68, 1); /* power2.out */
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .project-card__frame:hover .project-card__img,
-  .service-row__photo:hover .service-row__img {
+  .service-row__photo:hover .service-row__img,
+  .work-card__frame:hover .work-card__media {
     transform: scale(1.035);
   }
 }
@@ -708,6 +715,48 @@ html.js-ready .contact [data-contact-el="map"] {
   .contact__link::after,
   .footer__arrow {
     transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+ * Obras — Figma "Obras - Desktop" (123:2)
+ * ------------------------------------------------------------------ */
+/* "Degradê base (claro)" 123:3: off-white no topo, greige em 65%, areia no fim */
+.works {
+  background: linear-gradient(
+    to bottom,
+    #f8f6f1 0%,
+    #f1ede5 30%,
+    var(--color-greige) 65%,
+    #ece6dc 100%
+  );
+}
+
+/* "Brilho areia" 1–4 (123:5, 123:6, 124:112, 124:113) */
+.works__glow-sand {
+  background: radial-gradient(closest-side, rgb(219 178 125 / 0.5), rgb(219 178 125 / 0));
+}
+
+/* Entradas de Obras: estado de espera (ver "Entrada da Hero e da navbar") */
+html.js-ready .works [data-reveal],
+html.js-ready .works [data-word] {
+  opacity: 0;
+}
+
+html.js-ready .works [data-work-el="frame"] {
+  clip-path: inset(100% 0 0 0);
+}
+
+/* Vídeo da grade: transparente até o primeiro quadro (a capa nunca dá lugar a um quadro preto) */
+.work-card__media:is(video) {
+  background: transparent;
+}
+
+/* Galeria: botões ganham a borda bronze no hover */
+@media (hover: hover) {
+  .work-lightbox__button:hover {
+    border-color: var(--color-bronze);
+    color: var(--color-bronze);
   }
 }
 

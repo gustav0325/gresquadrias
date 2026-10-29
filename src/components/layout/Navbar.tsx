@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
-import { NAV_LINKS, NEW_TAB, QUOTE_LINK } from "@/config/navigation";
+import { NAV_LINKS, NEW_TAB, QUOTE_LINK, sectionId } from "@/config/navigation";
 import {
   entrancesEnabled,
   gsap,
@@ -15,9 +16,10 @@ import {
   useGSAP,
 } from "@/lib/gsap";
 import { lockPage } from "@/lib/page-lock";
+import { scrollToSection } from "@/lib/smooth-scroll";
 
-/** Seções na ordem da página; a Hero ("inicio") não tem link. */
-const SECTION_IDS = ["inicio", ...NAV_LINKS.map((link) => link.href.split("#")[1])];
+/** Seções da Home na ordem da página; a Hero ("inicio") não tem link. */
+const SECTION_IDS = ["inicio", ...NAV_LINKS.flatMap((link) => sectionId(link.href) ?? [])];
 /** Se a Hero não comandar a entrada (erro, foto travada), a navbar aparece mesmo assim. */
 const INTRO_FALLBACK_MS = 4500;
 /** A entrada da navbar acontece uma única vez por carregamento da página. */
@@ -29,8 +31,11 @@ const DESKTOP_QUERY = "(min-width: 64rem)";
  * Navbar fixa em cápsula de vidro.
  * Desktop (lg+): logo, links e botão Orçamento — Figma 74:1064 (sobre a Hero) e 74:8 (fundo claro).
  * Mobile: logo + "Menu" — Figma 96:144 (sobre a Hero) e 74:154 (fundo claro).
- * Tom "dark" sobre a Hero e blocos `[data-nav-tone="dark"]`; "light" no resto da página.
- * Um ScrollTrigger por seção marca o link ativo (bronze #996e40 + linha).
+ * Tom "dark" sobre a Hero e blocos `[data-nav-tone="dark"]`; "light" no resto da página e nas
+ * páginas sem Hero (/obras).
+ * Link ativo (bronze #996e40 + linha): na Home, a seção visível (um ScrollTrigger por seção);
+ * fora dela, o link da página atual ("Obras" em /obras).
+ * Links âncora fora da Home navegam para "/#secao" (o SmoothScroll rola até ela na chegada).
  *
  * Menu mobile (o Figma não tem o estado aberto): painel logo abaixo da cápsula, com o mesmo
  * vidro, os links e o botão Orçamento. É modal: trava a página, prende o foco na navbar e fecha
@@ -42,6 +47,8 @@ export function Navbar() {
   const menuRef = useRef<HTMLDivElement>(null);
   const scrimRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const [activeId, setActiveId] = useState("inicio");
   const [overDarkBlock, setOverDarkBlock] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -59,6 +66,21 @@ export function Navbar() {
   const onMenuLink = () => {
     lockPage(false);
     closeMenu(false);
+  };
+
+  // Logo já na Home: volta ao topo (em vez de uma navegação para a mesma rota)
+  const onLogo = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isHome || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    lockPage(false);
+    closeMenu(false);
+    scrollToSection(null);
+  };
+
+  const ariaCurrent = (href: string) => {
+    const id = sectionId(href);
+    if (id) return isHome && activeId === id ? ("location" as const) : undefined;
+    return pathname === href ? ("page" as const) : undefined;
   };
 
   // Menu aberto: página travada, Esc fecha, Tab circula pela navbar, desktop fecha
@@ -179,19 +201,31 @@ export function Navbar() {
       if (entrancesEnabled() && !introPlayed) {
         gsap.set(nav, { opacity: 0, y: -24 });
         window.addEventListener(HERO_INTRO_EVENT, onIntro);
+        // Página sem Hero (/obras aberta direto): entra logo, sem esperar o aviso
         fallback = window.setTimeout(
           () =>
             onIntro(
               new CustomEvent<HeroIntroDetail>(HERO_INTRO_EVENT, { detail: { timeScale: 1 } }),
             ),
-          INTRO_FALLBACK_MS,
+          isHome ? INTRO_FALLBACK_MS : 0,
         );
+      } else if (entrancesEnabled()) {
+        // Navbar remontada ao trocar de página: a entrada já aconteceu; visível mesmo se o CSS
+        // de espera (`html.js-ready`) ainda existir
+        gsap.set(nav, { opacity: 1 });
       }
 
-      // Link ativo: cada seção vale do topo dela até o topo da seguinte (contínuo, inclusive com o pin)
-      SECTION_IDS.forEach((id, i) => {
+      // Rotas anteriores continuam no DOM, escondidas (cacheComponents → <Activity hidden>):
+      // gatilhos só em elementos da página visível. Um gatilho em elemento com display: none
+      // nunca tem posição e faz o ScrollTrigger.refresh() entrar em recursão.
+      const rendered = (el: Element | null): el is HTMLElement =>
+        el instanceof HTMLElement && el.getClientRects().length > 0;
+
+      // Link ativo (só na Home): cada seção vale do topo dela até o topo da seguinte
+      // (contínuo, inclusive com o pin)
+      (isHome ? SECTION_IDS : []).forEach((id, i) => {
         const section = document.getElementById(id);
-        if (!section) return;
+        if (!rendered(section)) return;
         const next = document.getElementById(SECTION_IDS[i + 1] ?? "");
         ScrollTrigger.create({
           trigger: section,
@@ -205,7 +239,7 @@ export function Navbar() {
       });
 
       // Blocos escuros fora da Hero (ex.: CTA de Projetos)
-      document.querySelectorAll<HTMLElement>('[data-nav-tone="dark"]').forEach((block) => {
+      [...document.querySelectorAll('[data-nav-tone="dark"]')].filter(rendered).forEach((block) => {
         ScrollTrigger.create({
           trigger: block,
           start: () => `top ${probe()}px`,
@@ -224,12 +258,14 @@ export function Navbar() {
       return () => {
         window.clearTimeout(fallback);
         window.removeEventListener(HERO_INTRO_EVENT, onIntro);
+        // Página escondida e mostrada de novo (Activity): o estado volta a vir dos gatilhos novos
+        setOverDarkBlock(false);
       };
     },
     { scope: headerRef },
   );
 
-  const tone = activeId === "inicio" || overDarkBlock ? "dark" : "light";
+  const tone = (isHome && activeId === "inicio") || overDarkBlock ? "dark" : "light";
 
   return (
     <header
@@ -244,7 +280,7 @@ export function Navbar() {
         aria-label="Principal"
         className="flex h-[52px] items-center justify-between rounded-full border border-(--nav-border) bg-(--nav-bg) py-2.5 pr-(--nav-pad-r) pl-(--nav-pad-l) text-(--nav-fg) backdrop-blur-(--nav-blur) transition-[background-color,border-color,color,backdrop-filter] duration-300 lg:h-auto lg:py-2"
       >
-        <Link href="/" className="focus-ring shrink-0 rounded-sm">
+        <Link href="/" onClick={onLogo} className="focus-ring shrink-0 rounded-sm">
           <Image
             src="/images/brand/logo-gr.svg"
             alt="GR Esquadrias"
@@ -267,7 +303,7 @@ export function Navbar() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                aria-current={activeId === link.href.split("#")[1] ? "location" : undefined}
+                aria-current={ariaCurrent(link.href)}
                 className="navbar__link focus-ring rounded-sm"
               >
                 {link.label}
@@ -326,7 +362,7 @@ export function Navbar() {
               <Link
                 href={link.href}
                 onClick={onMenuLink}
-                aria-current={activeId === link.href.split("#")[1] ? "location" : undefined}
+                aria-current={ariaCurrent(link.href)}
                 className="focus-ring block rounded-sm py-3 aria-[current]:text-(--nav-active)"
               >
                 {link.label}

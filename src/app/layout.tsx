@@ -32,7 +32,13 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
+/** Base das URLs absolutas (Open Graph): domínio de produção na Vercel, localhost fora dela. */
+const SITE_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "GR Esquadrias",
   description:
     "Design, funcionalidade e qualidade em esquadrias de alumínio e vidro, do projeto à instalação.",

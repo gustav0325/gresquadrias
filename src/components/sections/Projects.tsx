@@ -4,31 +4,13 @@ import { useRef } from "react";
 
 import { MaskedWords } from "@/components/ui/MaskedWords";
 import { ProjectCard } from "@/components/ui/ProjectCard";
-import { NEW_TAB, QUOTE_LINK } from "@/config/navigation";
+import { QuoteCta } from "@/components/ui/QuoteCta";
 import { PROJETOS } from "@/data/projetos";
 import { entrancesEnabled, gsap, MOTION_QUERIES, useGSAP } from "@/lib/gsap";
-import { REVEALED } from "@/lib/reveal";
+import { REVEALED, revealLines, WORD_HIDDEN_Y } from "@/lib/reveal";
 
-/** Palavras abaixo da máscara: 100% da linha + o respiro de 0,12em da .word-mask. */
-const WORD_HIDDEN_Y = 115;
 /** Parallax das fotos (% da camada, que tem 112,5% da moldura): ±24px numa foto de 432px. */
 const PARALLAX_PERCENT = 5;
-
-/** Anima as palavras de cada linha juntas, uma linha após a outra. */
-function revealLines(
-  timeline: gsap.core.Timeline,
-  lines: Element[],
-  at: number,
-  vars: { duration: number; stagger: number },
-) {
-  lines.forEach((line, i) => {
-    timeline.to(
-      line.querySelectorAll("[data-word]"),
-      { yPercent: 0, duration: vars.duration, ease: "power3.out" },
-      at + i * vars.stagger,
-    );
-  });
-}
 
 /**
  * Seção Projetos da Home — Figma "2 · Projetos":
@@ -37,8 +19,8 @@ function revealLines(
  *
  * Fica uma camada acima da Hero: no desktop passa por cima dela como uma cortina.
  *
- * Animações (uma vez, ao entrar na tela): cabeçalho, cada foto (máscara + zoom-out) seguida da
- * legenda, e o CTA. Parallax das fotos só no desktop. Estados iniciais só sob `html.js-ready`.
+ * Animações (uma vez, ao entrar na tela): cabeçalho e cada foto (máscara + zoom-out) seguida da
+ * legenda; o CTA (QuoteCta) anima a própria entrada. Parallax das fotos só no desktop. Estados iniciais só sob `html.js-ready`.
  */
 export function Projects() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -102,30 +84,6 @@ export function Projects() {
               0.3 * k,
             );
         });
-
-        // CTA: rótulo, linhas do título e botão, 0,15 s entre eles
-        const ctaEyebrow = q('[data-projects-el="cta-eyebrow"]');
-        const ctaWords = words('[data-projects-el="cta-title"]');
-        const ctaLines = lines('[data-projects-el="cta-title"]');
-        const ctaButton = q('[data-projects-el="cta-button"]');
-        gsap.set(ctaEyebrow, { opacity: 0 });
-        gsap.set(ctaWords, { opacity: 1, yPercent: WORD_HIDDEN_Y });
-        gsap.set(ctaButton, { opacity: 0, y: 16 * k });
-        const cta = gsap.timeline({
-          scrollTrigger: {
-            trigger: q('[data-projects-el="cta"]')[0],
-            start: "top 80%",
-            once: true,
-          },
-          onComplete: clear([ctaEyebrow, ctaWords, ctaButton]),
-        });
-        cta.to(ctaEyebrow, { opacity: 1, duration: 0.6 * k, ease: "power2.out" }, 0);
-        revealLines(cta, ctaLines, 0.15, { duration: 0.9 * k, stagger: 0.15 });
-        cta.to(
-          ctaButton,
-          { opacity: 1, y: 0, duration: 0.65 * k, ease: "power2.out" },
-          0.15 + ctaLines.length * 0.15,
-        );
       }
 
       // ------------------------------------------------------------ Parallax (desktop)
@@ -222,47 +180,7 @@ export function Projects() {
         </ul>
       </div>
 
-      {/* CTA */}
-      <div
-        className="bg-night px-(--gutter) pb-16 md:pb-[clamp(56px,11vh,104px)]"
-        data-projects-el="cta"
-        data-nav-tone="dark"
-      >
-        <div className="h-px bg-white/14" />
-        {/* md+: grade em que o botão fica na linha do título, centralizado na vertical em relação a ele */}
-        <div className="mt-10 flex flex-col gap-8 md:mt-[clamp(56px,11vh,104px)] md:grid md:grid-cols-[1fr_auto] md:gap-x-8 md:gap-y-6">
-          <div className="flex flex-col gap-4 md:contents">
-            <p
-              className="text-[12px] leading-[normal] font-medium tracking-[0.14em] text-bronze md:col-start-1 md:row-start-1"
-              data-projects-el="cta-eyebrow"
-            >
-              SEU PROJETO
-            </p>
-            <h3
-              aria-label="A próxima obra pode ser a sua."
-              className="font-display text-[44px] leading-none font-medium tracking-[-0.02em] text-paper md:col-start-1 md:row-start-2 md:text-[length:clamp(2rem,min(4.2vw,7vh),3.5rem)] md:leading-[1.05]"
-              data-projects-el="cta-title"
-            >
-              <MaskedWords lines={["A próxima obra", "pode ser a sua."]} accent="sua." />
-            </h3>
-          </div>
-
-          <a
-            href={QUOTE_LINK.href}
-            {...NEW_TAB}
-            className="group focus-ring self-start rounded-full bg-bronze transition-colors duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-[#b88b5c] motion-reduce:transition-none px-8 py-[18px] text-[12px] leading-[1.21] font-medium tracking-[0.14em] text-ink md:col-start-2 md:row-start-2 md:flex md:h-[clamp(48px,7.5vh,60px)] md:items-center md:self-center md:px-[clamp(28px,3vw,44px)] md:py-0 md:text-[13px] md:tracking-[0.12em]"
-            data-projects-el="cta-button"
-          >
-            {/* Um só item flex: o espaço antes da seta não é descartado */}
-            <span>
-              PEDIR ORÇAMENTO{" "}
-              <span className="inline-block transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:translate-x-1 group-hover:-translate-y-1 motion-reduce:transition-none">
-                ↗
-              </span>
-            </span>
-          </a>
-        </div>
-      </div>
+      <QuoteCta />
 
       <div
         className="projects__grain pointer-events-none absolute inset-0 z-10"
